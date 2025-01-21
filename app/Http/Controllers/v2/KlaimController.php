@@ -2,15 +2,15 @@
 
 namespace App\Http\Controllers\v2;
 
+use App\Helpers\SafeAccess;
+use Illuminate\Support\Str;
 use App\Helpers\ApiResponse;
 use App\Helpers\NaikKelasHelper;
-use App\Helpers\SafeAccess;
+use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Halim\EKlaim\Builders\BodyBuilder;
-use Halim\EKlaim\Controllers\GroupKlaimController;
 use Halim\EKlaim\Services\EklaimService;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
+use Halim\EKlaim\Controllers\GroupKlaimController;
 
 class KlaimController extends Controller
 {
@@ -205,7 +205,7 @@ class KlaimController extends Controller
                 Log::channel(config('eklaim.log_channel'))->error("HASIL", ["grouping" => $hasilGrouping, "response" => $responseCode]);
             }
 
-            if ($responseCode && (\Illuminate\Support\Str::startsWith($responseCode, 'X') || \Illuminate\Support\Str::startsWith($responseCode, 'x'))) {
+            if ($responseCode && (Str::startsWith($responseCode, 'X') || Str::startsWith($responseCode, 'x'))) {
                 throw new \Exception($hasilGrouping->response->cbg->code . " : " . $hasilGrouping->response->cbg->description);
             }
 
@@ -506,13 +506,13 @@ class KlaimController extends Controller
         $sep = \App\Models\BridgingSep::where('no_sep', $sep)->first();
 
         if (!$sep || $sep->jnspelayanan == 2) {
-            \Log::channel(config('eklaim.log_channel'))->info("SKIP CEK NAIK KELAS", ["jenis_pelayanan" => $sep->jnspelayanan]);
+            Log::channel(config('eklaim.log_channel'))->info("SKIP CEK NAIK KELAS", ["jenis_pelayanan" => $sep->jnspelayanan]);
             return;
         }
 
         // in request not has upgrade_class_ind or upgrade_class_ind == 0
         if (!$request->has('upgrade_class_ind') || $request->upgrade_class_ind == 0) {
-            \Log::channel(config('eklaim.log_channel'))->info("SKIP CEK NAIK KELAS", ["upgrade_class_ind" => $request->upgrade_class_ind]);
+            Log::channel(config('eklaim.log_channel'))->info("SKIP CEK NAIK KELAS", ["upgrade_class_ind" => $request->upgrade_class_ind]);
             return;
         }
 
@@ -521,10 +521,10 @@ class KlaimController extends Controller
         $tarif_rs     = $cdp['tarif_rs'];
         $tarif_rs_sum = array_sum($tarif_rs);
 
-        $klsrawatNaik = in_array($sep->klsrawat, [1, 2]) && \Str::contains(\App\Helpers\NaikKelasHelper::translate($sep->klsnaik), ['VIP', 'Diatas']);
+        $klsrawatNaik = in_array($sep->klsrawat, [1, 2]) && Str::contains(\App\Helpers\NaikKelasHelper::translate($sep->klsnaik), ['VIP', 'Diatas']);
 
         if ($klsrawatNaik && $tarif_rs_sum < SafeAccess::object($groupResponse, 'response->cbg->tariff', 0)) {
-            \Log::channel(config('eklaim.log_channel'))->info("SKIP CEK NAIK KELAS", [
+            Log::channel(config('eklaim.log_channel'))->info("SKIP CEK NAIK KELAS", [
                 "tarif_rs_sum" => $tarif_rs_sum,
                 "cbg_tariff" => SafeAccess::object($groupResponse, 'response->cbg->tariff', 0),
             ]);
@@ -544,10 +544,13 @@ class KlaimController extends Controller
             $kelasHak      = $sep->klsrawat == 2 ? $altTariKelas2 : ($sep->klsrawat == 1 ? $altTariKelas1 : 0);
             $kelasNaik     = $sep->klsnaik  == 3 ? $altTariKelas1 : ($sep->klsnaik == 8 ? $altTariKelas1 : 0);
 
+            
             // Jika spesialis dokter adalah kandungan
             if (Str::contains(Str::lower($regPeriksa->dokter->spesialis->nm_sps), 'kandungan')) {
-                $kamarInap = \App\Models\KamarInap::where('no_rawat', $sep->no_rawat)->latest('tgl_masuk')->latest('jam_masuk')->first();
-
+                $kamarInap = \App\Models\KamarInap::where('no_rawat', $sep->no_rawat)
+                    ->where('stts_pulang', '<>', 'Pindah Kamar')
+                    ->latest('tgl_masuk')->latest('jam_masuk')->first();
+                
                 if (!$altTariKelas1) {
                     throw new \Exception("Pasien Naik Kelas namun, alt tarif kelas tidak ditemukan");
                 }
