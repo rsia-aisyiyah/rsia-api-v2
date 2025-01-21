@@ -10,13 +10,9 @@ Route::middleware(['user-aes', 'claim:role,pegawai'])->prefix('surat')->group(fu
   Route::resource('internal', \App\Http\Controllers\v2\RsiaSuratInternalController::class, [])->except(['create', 'edit'])
     ->parameters(['internal' => 'base64_nomor_surat']);
 
-
   // ==================== SURAT EKSTERNAL
-  Orion::resource('eksternal', \App\Http\Controllers\Orion\RsiaSuratEksternalController::class)->only('search');
-  Route::resource('eksternal', \App\Http\Controllers\v2\RsiaSuratEksternalController::class, [])
-    ->except(['create', 'edit'])
+  Orion::resource('eksternal', \App\Http\Controllers\Orion\RsiaSuratEksternalController::class)->only(['search', 'store', 'show', 'update'])
     ->parameters(['eksternal' => 'base64_nomor_surat']);
-
 
   // ==================== SURAT MASUK
   Orion::resource('masuk', \App\Http\Controllers\Orion\RsiaSuratMasukController::class)->only('search');

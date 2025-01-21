@@ -16,6 +16,181 @@ class RsiaSuratEksternalController extends Controller
     protected $model = \App\Models\RsiaSuratEksternal::class;
 
     /**
+     * Request class for the current resource
+     * 
+     * @var string $request
+     */
+    protected $request = \App\Http\Requests\SuratEksternalRequest::class;
+
+    /**
+     * The relations that are allowed to be included together with a resource.
+     * 
+     * @param Request $request
+     * @param array $requestedRelations
+     * @return \Illuminate\Database\Eloquent\Builder 
+     */
+    protected function buildIndexFetchQuery(Request $request, array $requestedRelations): \Illuminate\Database\Eloquent\Builder
+    {
+        return parent::buildIndexFetchQuery($request, $requestedRelations)
+            ->orderBy('created_at', 'desc');
+    }
+
+    /**
+     * Runs the given query for fetching entity in show method.
+     *
+     * @param Request $request
+     * @param Builder $query
+     * @param int|string $key
+     * @return Model
+     */
+    protected function runShowFetchQuery(Request $request, \Illuminate\Database\Eloquent\Builder $q, $key): \Illuminate\Database\Eloquent\Model
+    {
+        // try decoding the key using base64
+        try {
+            $key = base64_decode($key);
+        } catch (\Exception $e) {
+            throw new \Illuminate\Database\Eloquent\ModelNotFoundException();
+        }
+
+        return $this->runFetchQuery($request, $q, $key);
+    }
+
+    /**
+     * Runs the given query for fetching entity in update method.
+     *
+     * @param Request $request
+     * @param Builder $query
+     * @param int|string $key
+     * @return Model
+     */
+    protected function runUpdateFetchQuery(Request $request, \Illuminate\Database\Eloquent\Builder $q, $key): \Illuminate\Database\Eloquent\Model
+    {
+        try {
+            $key = base64_decode($key);
+        } catch (\Exception $e) {
+            throw new \Illuminate\Database\Eloquent\ModelNotFoundException();
+        }
+
+        return $this->runFetchQuery($request, $q, $key);
+    }
+
+    /**
+     * Fetches the model that has just been updated using the given key.
+     *
+     * @param Request $request
+     * @param array $requestedRelations
+     * @param int|string $key
+     * @return Model
+     */
+    protected function refreshUpdatedEntity(Request $request, array $requestedRelations, $key): \Illuminate\Database\Eloquent\Model
+    {
+        $query = $this->buildFetchQueryBase($request, $requestedRelations);
+
+        try {
+            $key = base64_decode($key);
+        } catch (\Exception $e) {
+            throw new \Illuminate\Database\Eloquent\ModelNotFoundException();
+        }
+
+        return $this->runFetchQueryBase($request, $query, $key);
+    }
+
+    /**
+     * Runs the given query for fetching entity in restore method.
+     *
+     * @param Request $request
+     * @param Builder $query
+     * @param int|string $key
+     * @return Model
+     */
+    protected function runRestoreFetchQuery(Request $request, \Illuminate\Database\Eloquent\Builder $q, $key): \Illuminate\Database\Eloquent\Model
+    {
+        try {
+            $key = base64_decode($key);
+        } catch (\Exception $e) {
+            throw new \Illuminate\Database\Eloquent\ModelNotFoundException();
+        }
+
+        return $this->runFetchQuery($request, $q, $key);
+    }
+
+    /**
+     * Runs the given query for fetching entity in destroy method.
+     *
+     * @param Request $request
+     * @param Builder $query
+     * @param int|string $key
+     * @return Model
+     */
+    protected function runDestroyFetchQuery(Request $request, \Illuminate\Database\Eloquent\Builder $q, $key): \Illuminate\Database\Eloquent\Model
+    {
+        try {
+            $key = base64_decode($key);
+        } catch (\Exception $e) {
+            throw new \Illuminate\Database\Eloquent\ModelNotFoundException();
+        }
+
+        return $this->runFetchQuery($request, $q, $key);
+    }
+
+    /**
+     * Fills attributes on the given entity and stores it in database.
+     *
+     * @param \Orion\Http\Requests\Request $request
+     * @param \Illuminate\Database\Eloquent\Model $entity
+     * @param array $attributes
+     */
+    protected function performStore(\Orion\Http\Requests\Request $request, \Illuminate\Database\Eloquent\Model $entity, array $attributes): void
+    {
+        $last_nomor = \App\Models\RsiaSuratEksternal::select('no_surat')
+            ->orderBy('created_at', 'desc')
+            ->whereYear('tgl_terbit', \Carbon\Carbon::parse($request->tgl_terbit)->year)
+            ->first();
+
+        if ($last_nomor) {
+            $last_nomor = explode('/', $last_nomor->no_surat);
+            $last_nomor[0] = str_pad($last_nomor[0] + 1, 3, '0', STR_PAD_LEFT);
+            $last_nomor[3] = \Carbon\Carbon::parse($request->tgl_terbit)->format('dmy');
+            $last_nomor = implode('/', $last_nomor);
+        } else {
+            $last_nomor = '001/B/S-RSIA/' . \Carbon\Carbon::parse($request->tgl_terbit)->format('dmy');
+        }
+
+        $nomor = $last_nomor;
+
+        $suratData = [
+            'no_surat'   => $nomor,
+            'perihal'    => $request->perihal,
+            'alamat'     => $request->alamat,
+            'tgl_terbit' => $request->tgl_terbit,
+            'pj'         => $request->pj,
+        ];
+
+        $this->performFill($request, $entity, $suratData);
+        $entity->save();
+    }
+
+    /**
+     * Fills attributes on the given entity and persists changes in database.
+     *
+     * @param Request $request
+     * @param Model $entity
+     * @param array $attributes
+     */
+    protected function performUpdate(Request $request, \Illuminate\Database\Eloquent\Model $e, array $attributes): void
+    {
+        $suratData = [
+            'perihal'    => $request->perihal,
+            'alamat'     => $request->alamat,
+            'tgl_terbit' => $request->tgl_terbit,
+            'pj'         => $request->pj,
+        ];
+
+        $this->performFill($request, $e, $suratData);
+        $e->save();
+    }
+
+    /**
      * Retrieves currently authenticated user based on the guard.
      *
      * @return \Illuminate\Contracts\Auth\Authenticatable|null
@@ -25,7 +200,7 @@ class RsiaSuratEksternalController extends Controller
         return \Illuminate\Support\Facades\Auth::guard('user-aes')->user();
     }
 
-     /**
+    /**
      * The attributes that are used for filtering.
      *
      * @return array
@@ -45,7 +220,7 @@ class RsiaSuratEksternalController extends Controller
         return ['penanggungJawabSimple.nama', 'pj', 'alamat', 'no_surat', 'created_at'];
     }
 
-        /**
+    /**
      * The relations that are always included together with a resource.
      *
      * @return array
