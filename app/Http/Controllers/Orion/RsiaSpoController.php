@@ -156,7 +156,6 @@ class RsiaSpoController extends \Orion\Http\Controllers\Controller
     {
         $query = $this->buildFetchQueryBase($request, $requestedRelations);
 
-        // try decoding the key using base64
         try {
             $key = base64_decode($key);
         } catch (\Exception $e) {

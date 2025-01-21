@@ -57,12 +57,25 @@ class RsiaSuratInternal extends Model
     public $timestamps = false;
 
 
-    public function penerima()
+    
+    public function undangan()
     {
-        return $this->hasMany(RsiaPenerimaUndangan::class, 'no_surat', 'no_surat')
-            ->select('no_surat', 'penerima', 'updated_at')->with('pegawai');
+        return $this->hasOne(RsiaUndangan::class, 'no_surat', 'no_surat');
+    }
+    
+    public function penerima_undangan()
+    {
+        return $this->hasManyThrough(RsiaPenerimaUndangan::class, RsiaUndangan::class, 'no_surat', 'undangan_id', 'no_surat', 'id');
     }
 
+
+
+    
+    public function penerima()
+    {
+        return $this->hasMany(RsiaPenerimaUndangan::class, 'no_surat', 'no_surat')->select('no_surat', 'penerima', 'updated_at')->with('pegawai');
+    }
+    
     public function penerimaUndangan()
     {
         return $this->hasMany(RsiaPenerimaUndangan::class, 'no_surat', 'no_surat');

@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers\v2;
 
-use App\Http\Controllers\Controller;
-use App\Models\RsiaSuratInternal;
+use App\Models\RsiaUndangan;
 use Illuminate\Http\Request;
+use App\Models\RsiaSuratInternal;
+use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Controller;
 use Orion\Http\Requests\Request as OrionRequest;
 
 class RsiaSuratInternalController extends Controller
@@ -16,20 +18,7 @@ class RsiaSuratInternalController extends Controller
      * 
      * @return \App\Http\Resources\Berkas\CompleteCollection
      */
-    public function index(Request $request)
-    {
-        $page = $request->input('page', 1);
-        $select = $request->input('select', '*');
-
-        $data = RsiaSuratInternal::select(array_map('trim', explode(',', $select)))
-            ->with(['penanggungJawab' => function ($query) {
-                $query->select('nik', 'nama');
-            }])
-            ->orderBy('created_at', 'desc')
-            ->paginate(10, array_map('trim', explode(',', $select)), 'page', $page);
-
-        return new \App\Http\Resources\Berkas\CompleteCollection($data);
-    }
+    public function index(Request $request) {}
 
     /**
      * Menampilkan form untuk membuat surat internal baru
@@ -38,10 +27,7 @@ class RsiaSuratInternalController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function create()
-    {
-        //
-    }
+    public function create() {}
 
     /**
      * Menyimpan surat internal baru
@@ -54,36 +40,81 @@ class RsiaSuratInternalController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate(self::validationRule(false));
+        // $request->validate([
+        //     "perihal"            => "required|string",
+        //     "pj"                 => "required|string|exists:pegawai,nik",
+        //     "tgl_terbit"         => "required|date",
+        //     "undangan"           => "nullable|array",
+        // ]);
 
-        $last_nomor = RsiaSuratInternal::select('no_surat')
-            ->orderBy('created_at', 'desc')
-            ->whereYear('tgl_terbit', \Carbon\Carbon::parse($request->tgl_terbit)->year)
-            ->first();
-        
-        if ($last_nomor) {
-            $last_nomor = explode('/', $last_nomor->no_surat);
-            $last_nomor[0] = str_pad($last_nomor[0] + 1, 3, '0', STR_PAD_LEFT);
-            $last_nomor[3] = \Carbon\Carbon::parse($request->tgl_terbit)->format('dmy');
-            $last_nomor = implode('/', $last_nomor);
-        } else {
-            $last_nomor = '001/A/S-RSIA/' . \Carbon\Carbon::parse($request->tgl_terbit)->format('dmy');
-        }
+        // if ($request->undangan) {
+        //     $request->validate([
+        //         "undangan.tanggal"   => "required|date_format:Y-m-d H:i:s",
+        //         "undangan.lokasi"    => "required|string",
+        //         "undangan.deskripsi" => "string",
+        //         "undangan.catatan"   => "string",
+        //         "undangan.status"    => "required|string|in:pengajuan,disetujui,ditolak,batal",
+        //     ]);
+        // }
 
-        $request->merge([
-            'no_surat' => $last_nomor,
-            'status' => 'pengajuan',
-        ]);
+        // $last_nomor = RsiaSuratInternal::select('no_surat')
+        //     ->orderBy('created_at', 'desc')
+        //     ->whereYear('tgl_terbit', \Carbon\Carbon::parse($request->tgl_terbit)->year)
+        //     ->first();
 
-        try {
-            RsiaSuratInternal::create($request->except('user'));
-        } catch (\Exception $e) {
-            \App\Helpers\Logger\RSIALogger::berkas("STORE DATA FAILED", 'error', ['data' => $request->all(), 'error' => $e->getMessage()]);
-            return \App\Helpers\ApiResponse::error('Failed to save data', 'store_failed', $e->getMessage(), 500);
-        }
+        // if ($last_nomor) {
+        //     $last_nomor = explode('/', $last_nomor->no_surat);
+        //     $last_nomor[0] = str_pad($last_nomor[0] + 1, 3, '0', STR_PAD_LEFT);
+        //     $last_nomor[3] = \Carbon\Carbon::parse($request->tgl_terbit)->format('dmy');
+        //     $last_nomor = implode('/', $last_nomor);
+        // } else {
+        //     $last_nomor = '001/A/S-RSIA/' . \Carbon\Carbon::parse($request->tgl_terbit)->format('dmy');
+        // }
 
-        \App\Helpers\Logger\RSIALogger::berkas("STORED", 'info', ['data' => $request->all()]);
-        return \App\Helpers\ApiResponse::success('Data saved successfully');
+        // $request->merge([
+        //     'no_surat' => $last_nomor,
+        // ]);
+
+        // $suratData = [
+        //     'no_surat'   => $request->no_surat,
+        //     'perihal'    => $request->perihal,
+        //     'pj'         => $request->pj,
+        //     'tgl_terbit' => $request->tgl_terbit,
+        // ];
+
+        // if ($request->undangan) {
+        //     $undanganData = [
+        //         'no_surat'   => $request->no_surat,
+        //         'model'      => RsiaSuratInternal::class,
+        //         'tanggal'    => $request->undangan['tanggal'],
+        //         'perihal'    => $request->perihal,
+        //         'lokasi'     => $request->undangan['lokasi'],
+        //         'deskripsi'  => $request->undangan['deskripsi'],
+        //         'catatan'    => $request->undangan['catatan'],
+        //         'pj'         => $request->pj,
+        //         'status'     => $request->undangan['status'],
+        //     ];
+        // }
+
+        // try {
+        //     DB::beginTransaction();
+
+        //     RsiaSuratInternal::updateOrCreate(['no_surat' => $request->no_surat], $suratData);
+
+        //     if ($request->undangan) {
+        //         RsiaUndangan::updateOrCreate(['no_surat' => $request->no_surat], $undanganData);
+        //     }
+
+        //     DB::commit();
+        // } catch (\Exception $e) {
+        //     DB::rollBack();
+
+        //     \App\Helpers\Logger\RSIALogger::berkas("STORE DATA FAILED", 'error', ['data' => $request->all(), 'error' => $e->getMessage()]);
+        //     return \App\Helpers\ApiResponse::error('Failed to save data', 'store_failed', $e->getMessage(), 500);
+        // } finally {
+        //     \App\Helpers\Logger\RSIALogger::berkas("STORED", 'info', ['data' => $request->all()]);
+        //     return \App\Helpers\ApiResponse::successWithData(['no_surat' => $request->no_surat], 'Data saved successfully');
+        // }
     }
 
     /**
