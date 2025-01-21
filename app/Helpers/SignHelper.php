@@ -15,7 +15,7 @@ class SignHelper
         }
 
         $text     = 'Dikeluarkan di RSIA Aisyiyah Pekajangan, Ditandatangani secara elektronik oleh ' . $name . '. ID : ' . $hash;
-        $logoPath = asset('assets/images/logo.png');
+        $logoPath = public_path('assets/images/logo.png');
 
         $qrCode = \Endroid\QrCode\Builder\Builder::create()
             ->writer(new \Endroid\QrCode\Writer\PngWriter())
@@ -33,7 +33,7 @@ class SignHelper
     public static function blankRsia()
     {
         $text     = 'Dikeluarkan di RSIA Aisyiyah Pekajangan, Ditandatangani secara elektronik pada ' . date('Y-m-d H:i:s') . ' ID : ' . \Illuminate\Support\Facades\Hash::make(date('Y-m-d H:i:s'));
-        $logoPath = asset('assets/images/logo.png');
+        $logoPath = public_path('assets/images/logo.png');
 
         $qrCode = \Endroid\QrCode\Builder\Builder::create()
             ->writer(new \Endroid\QrCode\Writer\PngWriter())
