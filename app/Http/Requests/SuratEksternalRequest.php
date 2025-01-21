@@ -22,4 +22,23 @@ class SuratEksternalRequest extends \Orion\Http\Requests\Request
 
         return $rules;
     }
+
+    /**
+     * Get the validation rules that apply to the request.
+     *
+     * @return array
+     */
+    public function updateRules(): array
+    {
+        $rules = [
+            // "no_surat"    => "required|string|unique:rsia_surat_eksternal,no_surat",
+            "perihal"     => "required|string",
+            "alamat"      => "required|string",
+            "tgl_terbit"  => "required|date_format:Y-m-d",
+            "pj"          => "required|string|exists:pegawai,nik",
+            // "tanggal"     => "required|date_format:Y-m-d H:i:s",
+        ];
+
+        return $rules;
+    }
 }
