@@ -416,10 +416,10 @@
                         <td class="border-b px-1 text-right text-sm leading-none" style="padding: 3px, 3px; border-color: lightgray">{{ number_format(\App\Helpers\SafeAccess::object($frpv, 'harga', 0), 0, ',', '.') }}</td>
                         <td class="border-b px-1 text-right text-sm leading-none" style="padding: 3px, 3px; border-color: lightgray">{{ number_format($rpv->sum('jml_barang'), 0, ',', '.') }}</td>
                         <td class="border-b px-1 text-right text-sm leading-none" style="padding: 3px, 3px; border-color: lightgray">0</td>
-                        <td class="border-b px-1 text-right text-sm leading-none" style="padding: 3px, 3px; border-color: lightgray">{{ number_format(\App\Helpers\SafeAccess::object($frpv, 'total', 0), 0, ',', '.') }}</td>
+                        <td class="border-b px-1 text-right text-sm leading-none" style="padding: 3px, 3px; border-color: lightgray">{{ number_format($rpv->sum('total'), 0, ',', '.') }}</td>
                     </tr>
 
-                    <?php $sumResepPulang += \App\Helpers\SafeAccess::object($frpv, 'total', 0); ?>
+                    <?php $sumResepPulang += $rpv->sum('total'); ?>
                 @endforeach
 
                 <tr>
