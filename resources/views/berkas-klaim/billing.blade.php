@@ -335,17 +335,22 @@
                                         {{ number_format(\App\Helpers\SafeAccess::object($frrov, 'h_retur', 0), 0, ',', '.') }}
                                     </td>
                                     <td class="border-b px-1 text-right text-sm leading-none" style="padding:3px 3px; border-color: lightgray">
-                                        - {{ \App\Helpers\SafeAccess::object($frrov, 'jml_retur', 0) }}
+                                        {{-- - {{ \App\Helpers\SafeAccess::object($frrov, 'jml_retur', 0) }} --}}
+                                        - {{ $rov->sum('jml_retur') }}
                                     </td>
                                     <td class="border-b px-1 text-right text-sm leading-none" style="padding:3px 3px; border-color: lightgray">
                                         0
                                     </td>
                                     <td class="border-b px-1 text-right text-sm leading-none" style="padding:3px 3px; border-color: lightgray">
-                                        - {{ number_format(\App\Helpers\SafeAccess::object($frrov, 'subtotal', 0), 0, ',', '.') }}
+                                        {{-- - {{ number_format(\App\Helpers\SafeAccess::object($frrov, 'subtotal', 0), 0, ',', '.') }} --}}
+                                        - {{ number_format($rov->sum('subtotal'), 0, ',', '.') }}
                                     </td>
                                 </tr>
 
-                                <?php $totalRetur += \App\Helpers\SafeAccess::object($frrov, 'subtotal', 0); ?>
+                                <?php 
+                                    // $totalRetur += \App\Helpers\SafeAccess::object($frrov, 'subtotal', 0); 
+                                    $totalRetur += $rov->sum('subtotal');
+                                ?>
                             @endforeach
 
                             <tr>
