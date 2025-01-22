@@ -14,9 +14,8 @@ Route::middleware(['user-aes', 'claim:role,pegawai'])->prefix('surat')->group(fu
     ->parameters(['eksternal' => 'base64_nomor_surat']);
 
   // ==================== SURAT MASUK
-  Orion::resource('masuk', \App\Http\Controllers\Orion\RsiaSuratMasukController::class)->only('search');
-  Route::apiResource('masuk', \App\Http\Controllers\v2\RsiaSuratMasukController::class)
-    ->parameters(['id']);
+  Orion::resource('masuk', \App\Http\Controllers\Orion\RsiaSuratMasukController::class)->only(['search', 'store', 'show', 'update'])
+    ->parameters(['masuk' => 'no']);
 });
 
 
