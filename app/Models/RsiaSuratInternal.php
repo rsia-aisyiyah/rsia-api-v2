@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * App\Models\RsiaSuratInternal
@@ -38,39 +39,64 @@ use Illuminate\Database\Eloquent\Model;
  */
 class RsiaSuratInternal extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
+    /**
+     * The table associated with the model.
+     *
+     * @var string
+     */
     protected $table = 'rsia_surat_internal';
 
-    protected $primaryKey = 'no_surat';
+    /**
+     * The primary key associated with the table.
+     *
+     * @var string
+     */
+    protected $primaryKey = 'id';
 
-    protected $keyType = 'string';
-
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array
+     */
     protected $casts = [
         'no_surat' => 'string',
     ];
 
-    protected $guarded = [];
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array
+     */
+    protected $guarded = ['id'];
 
-    public $incrementing = false;
+    /**
+     * Indicates if the IDs are auto-incrementing.
+     *
+     * @var bool
+     */
+    public $incrementing = true;
 
-    public $timestamps = false;
+    /**
+     * Indicates if the model should be timestamped.
+     *
+     * @var bool
+     */
+    public $timestamps = true;
 
 
     
     public function undangan()
     {
-        return $this->hasOne(RsiaUndangan::class, 'no_surat', 'no_surat');
+        return $this->hasOne(RsiaUndangan::class, 'surat_id', 'id');
     }
     
     public function penerima_undangan()
     {
-        return $this->hasManyThrough(RsiaPenerimaUndangan::class, RsiaUndangan::class, 'no_surat', 'undangan_id', 'no_surat', 'id');
+        return $this->hasManyThrough(RsiaPenerimaUndangan::class, RsiaUndangan::class, 'surat_id', 'undangan_id', 'id', 'id');
     }
 
-
-
-    
     public function penerima()
     {
         return $this->hasMany(RsiaPenerimaUndangan::class, 'no_surat', 'no_surat')->select('no_surat', 'penerima', 'updated_at')->with('pegawai');

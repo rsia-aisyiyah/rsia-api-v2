@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers\Orion;
 
-use Illuminate\Http\Request;
+// use Illuminate\Http\Request;
+use Orion\Http\Requests\Request;
+use Illuminate\Database\Eloquent\Model;
 use Orion\Concerns\DisableAuthorization;
+use Illuminate\Database\Eloquent\Builder;
 
 class RsiaSuratInternalController extends \Orion\Http\Controllers\Controller
 {
@@ -28,88 +31,57 @@ class RsiaSuratInternalController extends \Orion\Http\Controllers\Controller
      * 
      * @param Request $request
      * @param array $requestedRelations
-     * @return \Illuminate\Database\Eloquent\Builder 
+     * @return Builder 
      */
-    protected function buildIndexFetchQuery(Request $request, array $requestedRelations): \Illuminate\Database\Eloquent\Builder
+    protected function buildIndexFetchQuery(Request $request, array $requestedRelations): Builder
     {
         return parent::buildIndexFetchQuery($request, $requestedRelations)
             ->orderBy('created_at', 'desc');
     }
 
     /**
-     * Runs the given query for fetching entity in show method.
-     *
-     * @param Request $request
-     * @param Builder $query
-     * @param int|string $key
-     * @return Model
-     */
-    protected function runShowFetchQuery(Request $request, \Illuminate\Database\Eloquent\Builder $q, $key): \Illuminate\Database\Eloquent\Model
-    {
-        // try decoding the key using base64
-        try {
-            $key = base64_decode($key);
-        } catch (\Exception $e) {
-            throw new \Illuminate\Database\Eloquent\ModelNotFoundException();
-        }
-
-        return $this->runFetchQuery($request, $q, $key);
-    }
-
-    /**
      * Fills attributes on the given entity and stores it in database.
      *
-     * @param \Orion\Http\Requests\Request $request
-     * @param \Illuminate\Database\Eloquent\Model $entity
+     * @param Request $request
+     * @param Model $entity
      * @param array $attributes
      */
-    protected function performStore(\Orion\Http\Requests\Request $request, \Illuminate\Database\Eloquent\Model $entity, array $attributes): void
+    protected function performStore(Request $request, Model $entity, array $attributes): void
     {
-        $last_nomor = \App\Models\RsiaSuratInternal::select('no_surat')
-            ->orderBy('created_at', 'desc')
-            ->whereYear('tgl_terbit', \Carbon\Carbon::parse($request->tgl_terbit)->year)
-            ->first();
-
-        if ($last_nomor) {
-            $last_nomor = explode('/', $last_nomor->no_surat);
-            $last_nomor[0] = str_pad($last_nomor[0] + 1, 3, '0', STR_PAD_LEFT);
-            $last_nomor[3] = \Carbon\Carbon::parse($request->tgl_terbit)->format('dmy');
-            $last_nomor = implode('/', $last_nomor);
-        } else {
-            $last_nomor = '001/A/S-RSIA/' . \Carbon\Carbon::parse($request->tgl_terbit)->format('dmy');
-        }
-
-        $nomor = $last_nomor;
-
         $suratData = [
-            'no_surat'   => $nomor,
-            'perihal'    => $request->perihal,
-            'pj'         => $request->pj,
-            'tgl_terbit' => $request->tgl_terbit,
-            'status'     => $request->status,
+            'perihal'      => $request->perihal,
+            'tgl_terbit'   => $request->tgl_terbit,
+            'status'       => $request->status,
+            'pj'           => $request->pj,
+            'requested_by' => $this->resolveUser()->id_user,
+            'catatan'      => $request->catatan,
+            'status'       => $request->status ?? "pengajuan",
         ];
+
+        if ($request->status == 'disetujui') {
+            $last_nomor = \App\Models\RsiaSuratInternal::select('no_surat')
+                ->orderBy('created_at', 'desc')
+                ->where('no_surat', "<>", null)
+                ->whereYear('tgl_terbit', \Carbon\Carbon::parse($request->tgl_terbit)->year)
+                ->first();
+
+            if ($last_nomor) {
+                $last_nomor = explode('/', $last_nomor->no_surat);
+                $last_nomor[0] = str_pad($last_nomor[0] + 1, 3, '0', STR_PAD_LEFT);
+                $last_nomor[3] = \Carbon\Carbon::parse($request->tgl_terbit)->format('dmy');
+                $last_nomor = implode('/', $last_nomor);
+            } else {
+                $last_nomor = '001/A/S-RSIA/' . \Carbon\Carbon::parse($request->tgl_terbit)->format('dmy');
+            }
+
+            $nomor = $last_nomor;
+
+            $suratData['no_surat'] = $nomor;
+            $suratData['verified_at'] = now();
+        }
 
         $this->performFill($request, $entity, $suratData);
         $entity->save();
-    }
-
-    /**
-     * Runs the given query for fetching entity in update method.
-     *
-     * @param Request $request
-     * @param Builder $query
-     * @param int|string $key
-     * @return Model
-     */
-    protected function runUpdateFetchQuery(Request $request, \Illuminate\Database\Eloquent\Builder $q, $key): \Illuminate\Database\Eloquent\Model
-    {
-        try {
-            $key = base64_decode($key);
-        } catch (\Exception $e) {
-            throw new \Illuminate\Database\Eloquent\ModelNotFoundException();
-        }
-
-        return $this->runFetchQuery($request, $q, $key);
     }
 
     /**
@@ -119,38 +91,51 @@ class RsiaSuratInternalController extends \Orion\Http\Controllers\Controller
      * @param Model $entity
      * @param array $attributes
      */
-    protected function performUpdate(Request $request, \Illuminate\Database\Eloquent\Model $e, array $attributes): void
+    protected function performUpdate(Request $request, Model $e, array $attributes): void
     {
         $suratData = [
-            'perihal'    => $request->perihal,
-            'pj'         => $request->pj,
-            'tgl_terbit' => $request->tgl_terbit,
-            'status'     => $request->status,
+            'perihal'      => $request->perihal,
+            'tgl_terbit'   => $request->tgl_terbit,
+            'status'       => $request->status,
+            'pj'           => $request->pj,
+            'catatan'      => $request->catatan,
+            'status'       => $request->status ?? "pengajuan",
         ];
+
+        if ($request->status == 'disetujui' && !$e->no_surat) {
+            $last_nomor = \App\Models\RsiaSuratInternal::select('no_surat')
+                ->orderBy('created_at', 'desc')
+                ->where('no_surat', "<>", null)
+                ->whereYear('tgl_terbit', \Carbon\Carbon::parse($request->tgl_terbit)->year)
+                ->first();
+
+            if ($last_nomor) {
+                $last_nomor = explode('/', $last_nomor->no_surat);
+                $last_nomor[0] = str_pad($last_nomor[0] + 1, 3, '0', STR_PAD_LEFT);
+                $last_nomor[3] = \Carbon\Carbon::parse($request->tgl_terbit)->format('dmy');
+                $last_nomor = implode('/', $last_nomor);
+            } else {
+                $last_nomor = '001/A/S-RSIA/' . \Carbon\Carbon::parse($request->tgl_terbit)->format('dmy');
+            }
+
+            $nomor = $last_nomor;
+
+            $suratData['verified_at'] = now();
+            $suratData['no_surat'] = $nomor;
+        }
+
+        if ($request->status == 'disetujui') {
+            $suratData['verified_at'] = now();
+        } else {
+            $suratData['verified_at'] = null;
+        }
+
+        if (!$e->requested_by) {
+            $suratData['requested_by'] = $this->resolveUser()->id_user;
+        }
 
         $this->performFill($request, $e, $suratData);
         $e->save();
-    }
-
-    /**
-     * Fetches the model that has just been updated using the given key.
-     *
-     * @param Request $request
-     * @param array $requestedRelations
-     * @param int|string $key
-     * @return Model
-     */
-    protected function refreshUpdatedEntity(Request $request, array $requestedRelations, $key): \Illuminate\Database\Eloquent\Model
-    {
-        $query = $this->buildFetchQueryBase($request, $requestedRelations);
-
-        try {
-            $key = base64_decode($key);
-        } catch (\Exception $e) {
-            throw new \Illuminate\Database\Eloquent\ModelNotFoundException();
-        }
-
-        return $this->runFetchQueryBase($request, $query, $key);
     }
 
     /**
@@ -160,11 +145,11 @@ class RsiaSuratInternalController extends \Orion\Http\Controllers\Controller
      * @param Model $entity
      * @return mixed
      */
-    protected function afterStore(Request $request, \Illuminate\Database\Eloquent\Model $entity)
+    protected function afterStore(Request $request, Model $entity)
     {
         if ($request->undangan) {
             $undanganData = [
-                'no_surat'   => $entity->no_surat,
+                'surat_id'   => $entity->id,
                 'model'      => \App\Models\RsiaSuratInternal::class,
                 'tanggal'    => $request->undangan['tanggal'],
                 'perihal'    => $request->perihal,
@@ -188,11 +173,10 @@ class RsiaSuratInternalController extends \Orion\Http\Controllers\Controller
      * @param Model $entity
      * @return mixed
      */
-    protected function afterUpdate(Request $request, \Illuminate\Database\Eloquent\Model $entity)
+    protected function afterUpdate(Request $request, Model $entity)
     {
         if ($request->undangan) {
             $undanganData = [
-                'no_surat'   => $entity->no_surat,
                 'model'      => \App\Models\RsiaSuratInternal::class,
                 'tanggal'    => $request->undangan['tanggal'],
                 'perihal'    => $request->perihal,
@@ -200,51 +184,27 @@ class RsiaSuratInternalController extends \Orion\Http\Controllers\Controller
                 'deskripsi'  => $request->undangan['deskripsi'],
                 'catatan'    => $request->undangan['catatan'],
                 'pj'         => $request->pj,
-                // 'status'     => $request->undangan['status'],
             ];
 
-            $undangan = \App\Models\RsiaUndangan::where('no_surat', $entity->no_surat)->first();
-            $undangan->fill($undanganData);
-            $undangan->save();
+            \App\Models\RsiaUndangan::updateOrCreate(
+                ['surat_id' => $entity->id],
+                $undanganData
+            );
+        } else {
+            \App\Models\RsiaUndangan::where('surat_id', $entity->id)->delete();
         }
     }
 
     /**
-     * Runs the given query for fetching entity in restore method.
+     * The hook is executed after deleting a resource.
      *
      * @param Request $request
-     * @param Builder $query
-     * @param int|string $key
-     * @return Model
+     * @param Model $entity
+     * @return mixed
      */
-    protected function runRestoreFetchQuery(Request $request, \Illuminate\Database\Eloquent\Builder $q, $key): \Illuminate\Database\Eloquent\Model
+    protected function afterDestroy(Request $request, Model $entity)
     {
-        try {
-            $key = base64_decode($key);
-        } catch (\Exception $e) {
-            throw new \Illuminate\Database\Eloquent\ModelNotFoundException();
-        }
-
-        return $this->runFetchQuery($request, $q, $key);
-    }
-
-    /**
-     * Runs the given query for fetching entity in destroy method.
-     *
-     * @param Request $request
-     * @param Builder $query
-     * @param int|string $key
-     * @return Model
-     */
-    protected function runDestroyFetchQuery(Request $request, \Illuminate\Database\Eloquent\Builder $q, $key): \Illuminate\Database\Eloquent\Model
-    {
-        try {
-            $key = base64_decode($key);
-        } catch (\Exception $e) {
-            throw new \Illuminate\Database\Eloquent\ModelNotFoundException();
-        }
-
-        return $this->runFetchQuery($request, $q, $key);
+        \App\Models\RsiaUndangan::where('surat_id', $entity->id)->delete();
     }
 
     /**

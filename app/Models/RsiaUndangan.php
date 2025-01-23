@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class RsiaUndangan extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     /**
      * The table associated with the model.
@@ -36,12 +37,12 @@ class RsiaUndangan extends Model
      * @var array
      */
     protected $casts = [
-        'no_surat'   => 'string',
         'pj'         => 'string',
         'modals'     => 'string',
         'tanggal'    => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
+        'deleted_at' => 'datetime',
     ];
 
     /**
@@ -49,7 +50,7 @@ class RsiaUndangan extends Model
      *
      * @var array
      */
-    protected $guarded = [];
+    protected $guarded = ['id'];
 
     /**
      * Indicates if the model should be timestamped.
