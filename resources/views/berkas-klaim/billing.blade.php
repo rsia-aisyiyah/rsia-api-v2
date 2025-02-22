@@ -169,10 +169,11 @@
         </table>
     @endif
 
-    <h4 class="text-base font-bold" style="margin-bottom: 2px">&#x2022; Rincian Biaya</h4>
+    {{-- <h4 class="text-base font-bold" style="margin-bottom: 2px">&#x2022; Rincian Biaya</h4> --}}
     <?php $sumOfBiling = 0; $sumResepPulang = 0; ?>
     @foreach ($billing as $noRawat => $items)
-        <table class="table mb-5 w-full">
+        <h4 class="text-base font-bold" style="margin-bottom: 2px">&#x2022; Rincian Biaya : <span style="float: right">{{ $noRawat }}</span></h4>
+        <table class="table w-full mb-5">
             <thead>
                 <tr style="background-color: lightgoldenrodyellow">
                     <th class="border-b border-t px-1 text-left text-sm leading-none" style="border-color: #333, #333">Keterangan</th>
@@ -394,10 +395,10 @@
         </table>
 
         @if ($indexForResepPulang == $items->count())
-            @if ($resepPulang->get($noRawat))
+            @if ($resepPulang && $resepPulang->get($noRawat))
                 <?php $sumResepPulangPerNoRawat = 0; ?>
 
-                <h4 class="text-base font-bold" style="margin-bottom: 2px">&#x2022; Resep Pulang</h4>
+                <h4 class="text-base font-bold" style="margin-bottom: 2px">&#x2022; Resep Pulang : <span style="float: right">{{ $noRawat }}</span></h4>
                 <table class="table mb-5 w-full">
                     <thead>
                         <tr style="background-color: lightgoldenrodyellow">
@@ -445,6 +446,11 @@
                 </table>
 
                 <?php $sumResepPulang += $sumResepPulangPerNoRawat; ?>
+
+                {{-- resep pulang key == $noRawat --}}
+                @if ($resepPulang->keys()->last() != $noRawat)
+                    <div class="w-full border-b-2 border-t-2 border-gray-300 my-5" style="border-color: #333"></div>
+                @endif
             @endif
         @endif
 
