@@ -13,6 +13,7 @@ Route::middleware(['user-aes', 'detail-user', 'claim:role,pegawai|dokter'])->gro
     Route::get('/sep/{no_sep}/print', [\App\Http\Controllers\v2\BerkasKlaimController2::class, 'print']);
     // Route::get('/sep/{no_sep}/print2', [\App\Http\Controllers\v2\BerkasKlaimController2::class, 'print']);
     Route::get('/sep/{no_sep}/export', [\App\Http\Controllers\v2\BerkasKlaimController2::class, 'export']);
+    Route::delete('/sep/{no_sep}/delete', [\App\Http\Controllers\v2\BerkasKlaimController2::class, 'delete']);
     Route::get('/sep/{no_sep}/klaim/sync', [\App\Http\Controllers\v2\KlaimController::class, 'sync']);
 
 

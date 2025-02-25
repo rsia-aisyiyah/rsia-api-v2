@@ -87,7 +87,7 @@
                                 <td class="border p-1" style="font-size: 10pt; border-color: #333;">-</td>
                                 <td class="border text-center p-1" style="font-size: 10pt; border-color: #333;">{{ $pasien->diagnosa->get($i + 2)->kd_penyakit ?? "-" }}</td>
                                 <td class="border p-1" style="font-size: 10pt; border-color: #333;">{{ $pasien->diagnosa->get($i + 2)->penyakit->nm_penyakit ?? "-" }}</td>
-                                <td class="border text-center p-1" style="font-size: 10pt; border-color: #333;">{{ $pasien->prosedur->get($i + 2)->penyakit->nm_penyakit ?? "-" }}</td>
+                                <td class="border text-center p-1" style="font-size: 10pt; border-color: #333;">{{ $pasien->prosedur->get($i + 1)->kode ?? "-" }}</td>
                             </tr>
                             @endfor
                         @endif
@@ -113,7 +113,7 @@
 
                                 <div class="mt-24">
                                     <div class="leading-none">
-                                        <p class="font-bold"><u>dr. Rendy Yoga Andrian, Sp.A</u></p>
+                                        <p class="font-bold"><u>dr. Rendy Yoga Adrian, Sp.A</u></p>
                                     </div>
                                 </div>
                             </td>

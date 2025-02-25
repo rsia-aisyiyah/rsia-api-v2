@@ -170,7 +170,7 @@
     @endif
 
     <h4 class="text-base font-bold" style="margin-bottom: 2px">&#x2022; Rincian Biaya</h4>
-    <?php $sumOfBiling = 0; ?>
+    <?php $sumOfBiling = 0; $sumResepPulang = 0; ?>
     @foreach ($billing as $noRawat => $items)
         <table class="table mb-5 w-full">
             <thead>
@@ -187,7 +187,8 @@
                 <?php 
                     $sumAllCategories = 0;  
                     $indexItem = 0;
-                    $noKartegori = 1; 
+                    $noKartegori = 1;
+                    $indexForResepPulang = 0;
                 ?>
                 @foreach ($items as $kategori => $item)
                     <?php $sumCategory = 0; ?>
@@ -384,65 +385,71 @@
 
                     {{-- Reset index item --}}
                     <?php
-                        $noKartegori++; 
+                        $noKartegori++;
+                        $indexForResepPulang++;
                         $indexItem = 0;
                     ?>
                 @endforeach
             </tbody>
         </table>
 
+        @if ($indexForResepPulang == $items->count())
+            @if ($resepPulang->get($noRawat))
+                <?php $sumResepPulangPerNoRawat = 0; ?>
+
+                <h4 class="text-base font-bold" style="margin-bottom: 2px">&#x2022; Resep Pulang</h4>
+                <table class="table mb-5 w-full">
+                    <thead>
+                        <tr style="background-color: lightgoldenrodyellow">
+                            <th class="border-b border-t px-1 text-left text-sm leading-none" style="border-color: #333, #333">Keterangan</th>
+                            <th class="border-b border-t px-1 text-left text-sm leading-none" style="border-color: #333, #333">Tindakan / Terapi</th>
+                            <th class="border-b border-t px-1 text-right text-sm leading-none" style="border-color: #333, #333">Biaya</th>
+                            <th class="border-b border-t px-1 text-right text-sm leading-none" style="border-color: #333, #333">Jumlah</th>
+                            <th class="border-b border-t px-1 text-right text-sm leading-none" style="border-color: #333, #333">Tambahan</th>
+                            <th class="whitespace-nowrap border-b border-t px-1 text-right text-sm leading-none" style="border-color: #333, #333">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($resepPulang->get($noRawat) as $rpk => $rpv)
+                            <?php $frpv = $rpv->first(); ?>
+                            <tr>
+                                <td class="px-1 text-sm font-bold leading-none" style="padding: 3px, 3px; border-color: #333; width: 150px;">
+                                    @if ($loop->first)
+                                        <span class="font-bold">Resep Pulang</span>
+                                    @endif
+                                </td>
+                                <td class="border-b px-1 text-sm leading-none" style="padding: 3px, 3px; border-color: lightgray; max-width: 250px;">{{ \App\Helpers\SafeAccess::object($frpv, 'obat->nama_brng', '') }}</td>
+                                <td class="border-b px-1 text-right text-sm leading-none" style="padding: 3px, 3px; border-color: lightgray">{{ number_format(\App\Helpers\SafeAccess::object($frpv, 'harga', 0), 0, ',', '.') }}</td>
+                                <td class="border-b px-1 text-right text-sm leading-none" style="padding: 3px, 3px; border-color: lightgray">{{ number_format($rpv->sum('jml_barang'), 0, ',', '.') }}</td>
+                                <td class="border-b px-1 text-right text-sm leading-none" style="padding: 3px, 3px; border-color: lightgray">0</td>
+                                <td class="border-b px-1 text-right text-sm leading-none" style="padding: 3px, 3px; border-color: lightgray">{{ number_format($rpv->sum('total'), 0, ',', '.') }}</td>
+                            </tr>
+
+                            <?php $sumResepPulangPerNoRawat += $rpv->sum('total'); ?>
+                        @endforeach
+
+                        <tr>
+                            <td></td>
+                            <td class="px-1 py-1 text-left text-sm font-bold italic leading-none" style="padding: 3px, 3px; background-color: lightgrey" colspan="4">Total Biaya Resep Pulang</td>
+                            <td class="px-1 py-1 text-right text-sm font-bold italic leading-none" style="padding: 3px, 3px; background-color: lightgrey">
+                                Rp {{ number_format($sumResepPulangPerNoRawat, 0, ',', '.') }}
+                            </td>
+                        </tr>
+
+                        {{-- gap --}}
+                        <tr>
+                            <td class="border-b px-1 py-1 text-sm font-bold leading-none" style="padding: 3px, 3px; border-color: #333"></td>
+                            <td class="border-b px-1 py-1 text-sm font-bold leading-none" style="padding: 3px, 3px; border-color: #333" colspan="5"></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <?php $sumResepPulang += $sumResepPulangPerNoRawat; ?>
+            @endif
+        @endif
+
         <?php $sumOfBiling += $sumAllCategories; ?>
     @endforeach
-
-    <?php $sumResepPulang = 0; ?>
-    @if ($resepPulang)
-        <h4 class="text-base font-bold" style="margin-bottom: 2px">&#x2022; Resep Pulang</h4>
-        <table class="table mb-5 w-full">
-            <thead>
-                <tr style="background-color: lightgoldenrodyellow">
-                    <th class="border-b border-t px-1 text-left text-sm leading-none" style="border-color: #333, #333">Keterangan</th>
-                    <th class="border-b border-t px-1 text-left text-sm leading-none" style="border-color: #333, #333">Tindakan / Terapi</th>
-                    <th class="border-b border-t px-1 text-right text-sm leading-none" style="border-color: #333, #333">Biaya</th>
-                    <th class="border-b border-t px-1 text-right text-sm leading-none" style="border-color: #333, #333">Jumlah</th>
-                    <th class="border-b border-t px-1 text-right text-sm leading-none" style="border-color: #333, #333">Tambahan</th>
-                    <th class="whitespace-nowrap border-b border-t px-1 text-right text-sm leading-none" style="border-color: #333, #333">Total</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach ($resepPulang as $rpk => $rpv)
-                    <?php $frpv = $rpv->first(); ?>
-                    <tr>
-                        <td class="px-1 text-sm font-bold leading-none" style="padding: 3px, 3px; border-color: #333; width: 150px;">
-                            @if ($loop->first)
-                                <span class="font-bold">Resep Pulang</span>
-                            @endif
-                        </td>
-                        <td class="border-b px-1 text-sm leading-none" style="padding: 3px, 3px; border-color: lightgray; max-width: 250px;">{{ \App\Helpers\SafeAccess::object($frpv, 'obat->nama_brng', '') }}</td>
-                        <td class="border-b px-1 text-right text-sm leading-none" style="padding: 3px, 3px; border-color: lightgray">{{ number_format(\App\Helpers\SafeAccess::object($frpv, 'harga', 0), 0, ',', '.') }}</td>
-                        <td class="border-b px-1 text-right text-sm leading-none" style="padding: 3px, 3px; border-color: lightgray">{{ number_format($rpv->sum('jml_barang'), 0, ',', '.') }}</td>
-                        <td class="border-b px-1 text-right text-sm leading-none" style="padding: 3px, 3px; border-color: lightgray">0</td>
-                        <td class="border-b px-1 text-right text-sm leading-none" style="padding: 3px, 3px; border-color: lightgray">{{ number_format($rpv->sum('total'), 0, ',', '.') }}</td>
-                    </tr>
-
-                    <?php $sumResepPulang += $rpv->sum('total'); ?>
-                @endforeach
-
-                <tr>
-                    <td></td>
-                    <td class="px-1 py-1 text-left text-sm font-bold italic leading-none" style="padding: 3px, 3px; background-color: lightgrey" colspan="4">Total Biaya Resep Pulang</td>
-                    <td class="px-1 py-1 text-right text-sm font-bold italic leading-none" style="padding: 3px, 3px; background-color: lightgrey">
-                        Rp {{ number_format($sumResepPulang, 0, ',', '.') }}
-                    </td>
-                </tr>
-
-                {{-- gap --}}
-                <tr>
-                    <td class="border-b px-1 py-1 text-sm font-bold leading-none" style="padding: 3px, 3px; border-color: #333"></td>
-                    <td class="border-b px-1 py-1 text-sm font-bold leading-none" style="padding: 3px, 3px; border-color: #333" colspan="5"></td>
-                </tr>
-            </tbody>
-        </table>
-    @endif
 
     <h4 class="text-base font-bold" style="margin-bottom: 2px">&#x2022; Tambahan & Potongan Biaya</h4>
     <table class="table mb-5 w-full">

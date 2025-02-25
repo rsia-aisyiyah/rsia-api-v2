@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\v2;
 
-
+use App\Helpers\ApiResponse;
 use App\Helpers\PDFHelper;
 use App\Helpers\SignHelper;
 use Illuminate\Support\Str;
@@ -55,6 +55,38 @@ class BerkasKlaimController2 extends Controller
         ]);
     }
 
+
+    // ====================================================================================================
+
+
+    public function delete($sep)
+    {
+        $bSep = \App\Models\BridgingSep::where('no_sep', $sep)->first();
+        if (!$bSep) {
+            return ApiResponse::error('Resource not found', 'Data tidak ditemukan', null, 404);
+        }
+
+        $berkas = \App\Models\BerkasDigitalPerawatan::where('no_rawat', $bSep->no_rawat)->where('kode', '009')->first();
+        if (!$berkas) {
+            return ApiResponse::error('Resource not found', 'Data tidak ditemukan', null, 404);
+        }
+
+        try {
+            $st = \Illuminate\Support\Facades\Storage::disk('sftp');
+            $filePath = '/simrsiav2/file/berkas_klaim_pengajuan/' . $berkas->lokasi_file;
+
+            if ($berkas->lokasi_file && $st->exists($filePath) && !$st->directories($filePath)) {
+                $st->delete($filePath);
+            }
+
+            // Hapus record di database setelah memastikan file dihapus dengan aman
+            $berkas->delete();
+
+            return ApiResponse::success('Data berhasil dihapus');
+        } catch (\Throwable $th) {
+            return ApiResponse::error('Internal Server Error', 'Gagal menghapus berkas klaim', $th->getMessage(), 500);
+        }
+    }
 
     // ====================================================================================================
 
@@ -638,12 +670,19 @@ class BerkasKlaimController2 extends Controller
 
     public function genBillingPage($regPeriksa, $dpjp, $pasien)
     {
+        $noRawatGabung = $this->cekGabung($regPeriksa->no_rawat);
+
         $bData         = $this->billingData($regPeriksa->no_rawat, $regPeriksa->status_lanjut);
         $kasir         = \App\Helpers\JurnalHelper::determinePetugas($regPeriksa->no_rawat);
         $asmenKeuangan = \App\Models\Pegawai::select('id', 'nik', 'nama', 'jnj_jabatan')->where('jnj_jabatan', 'RS7')->first();
 
         if (Str::lower($regPeriksa->status_lanjut) == 'ranap') {
-            $resepPulang = \App\Models\ResepPulang::with('obat')->where('no_rawat', $regPeriksa->no_rawat)->get()->groupBy('kode_brng');
+            // $resepPulang = \App\Models\ResepPulang::with('obat')->where('no_rawat', $regPeriksa->no_rawat)->get()->groupBy('kode_brng');
+            $resepPulang = \App\Models\ResepPulang::with('obat')->whereIn('no_rawat', $noRawatGabung)->get()->groupBy('no_rawat');
+            $resepPulang = $resepPulang->map(function ($grouped) {
+                return $grouped->groupBy('kode_brng');
+            });
+
             $ruang       = \App\Models\KamarInap::with(['kamar.bangsal'])->where('no_rawat', $regPeriksa->no_rawat)->orderBy('tgl_masuk', 'desc')->orderBy('jam_masuk', 'desc')->get();
         }
 
@@ -770,12 +809,12 @@ class BerkasKlaimController2 extends Controller
             'with' => [
                 'jenisPerawatan' => function ($q) {
                     $q->select(
-                        DB::raw('TRIM(kd_jenis_prw) as kd_jenis_prw'), 
-                        DB::raw('TRIM(nm_perawatan) as nm_perawatan'), 
+                        DB::raw('TRIM(kd_jenis_prw) as kd_jenis_prw'),
+                        DB::raw('TRIM(nm_perawatan) as nm_perawatan'),
                         DB::raw('TRIM(kd_kategori) as kd_kategori')
                     )->with(['kategori' => function ($qq) {
                         $qq->select(
-                            DB::raw('TRIM(kd_kategori) as kd_kategori'), 
+                            DB::raw('TRIM(kd_kategori) as kd_kategori'),
                             DB::raw('TRIM(nm_kategori) as nm_kategori')
                         );
                     }]);
