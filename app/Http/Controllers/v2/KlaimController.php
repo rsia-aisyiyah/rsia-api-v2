@@ -544,66 +544,59 @@ class KlaimController extends Controller
             $kelasHak      = $sep->klsrawat == 2 ? $altTariKelas2 : ($sep->klsrawat == 1 ? $altTariKelas1 : 0);
             $kelasNaik     = $sep->klsnaik  == 3 ? $altTariKelas1 : ($sep->klsnaik == 8 ? $altTariKelas1 : 0);
 
-            if ($tarif_rs_sum > $cbgTarif) {
-                $tambahanBiaya = $tarif_rs_sum - $cbgTarif; 
-            } else {
-                // Jika spesialis dokter adalah kandungan
-                if (Str::contains(Str::lower($regPeriksa->dokter->spesialis->nm_sps), 'kandungan')) {
-                    $kamarInap = \App\Models\KamarInap::where('no_rawat', $sep->no_rawat)
-                        ->where('stts_pulang', '<>', 'Pindah Kamar')
-                        ->latest('tgl_masuk')->latest('jam_masuk')->first();
-                    
-                    if (!$altTariKelas1) {
-                        throw new \Exception("Pasien Naik Kelas namun, alt tarif kelas tidak ditemukan");
-                    }
-    
-                    // TODO : Tambahkan kondisi tarif rs > cbgTarif
-    
-                    if (Str::contains(Str::lower($kamarInap->kd_kamar), 'kandungan va')) {
-                        $presentase    = 73;
-                        $tambahanBiaya = $kelasNaik - $kelasHak + ($kelasNaik * $presentase / 100);
-                    } elseif (Str::contains(Str::lower($kamarInap->kd_kamar), 'kandungan vb')) {
-                        $presentase    = 43;
-                        $tambahanBiaya = $kelasNaik - $kelasHak + ($kelasNaik * $presentase / 100);
-                    } else {
-                        $tambahanBiaya = $kelasNaik - $kelasHak;
-                    }
-                } else { // Jika spesialis dokter bukan kandungan (anak)
-                    if (!$altTariKelas1) {
-                        throw new \Exception("Pasien Naik Kelas namun, alt tarif kelas tidak ditemukan");
-                    }
-    
-                    // TODO : Tambahkan kondisi tarif rs > cbgTarif
-    
-                    $isVip = $sep->klsnaik == 8;
-                    if ($isVip) {
-                        $selisihDenganHasilGroup = $tarif_rs_sum - $cbgTarif;
-                        // Tarif Kelas Naik - Tarif Kelas Hak + (Tarif Kelas Naik * x%) = (Real Cost Rumah Sakit - cbgTariff) atau $selisihDenganHasilGroup
-    
-                        // 1. Sederhanakan bagian satu
-                        $satu = $kelasNaik - $kelasHak;
-                        // Jadi, persamaan menjadi : $satu + (Tarif Kelas Naik * x%) = $selisihDenganHasilGroup
-    
-                        // 2. pindahkan $satu ke sebelah kanan : (Tarif Kelas Naik * x%) = $selisihDenganHasilGroup - $satu
-                        $dua = $selisihDenganHasilGroup - $satu;
-                        // Jadi, persamaan menjadi : Tarif Kelas Naik * x% = $dua
-    
-                        // 3. cari x%
-                        $x = $dua / $kelasNaik;
-                        $xPersen = $x * 100;
-    
-                        if ($xPersen >= 75) {
-                            $xPersen = 75;
-                        }
-    
-                        // Menghitung tarif tambahan berdasarkan persentase
-                        $tambahanBiaya = $kelasNaik - $kelasHak + ($kelasNaik * $xPersen / 100);
-                    } else {
-                        $tambahanBiaya = $kelasNaik - $kelasHak;
-                    }
-    
-                    $presentase = $xPersen ?? 0;
+            // Jika spesialis dokter adalah kandungan
+            if (Str::contains(Str::lower($regPeriksa->dokter->spesialis->nm_sps), 'kandungan')) {
+                $kamarInap = \App\Models\KamarInap::where('no_rawat', $sep->no_rawat)
+                    ->where('stts_pulang', '<>', 'Pindah Kamar')
+                    ->latest('tgl_masuk')->latest('jam_masuk')->first();
+                
+                if (!$altTariKelas1) {
+                    throw new \Exception("Pasien Naik Kelas namun, alt tarif kelas tidak ditemukan");
                 }
+
+                if (Str::contains(Str::lower($kamarInap->kd_kamar), 'kandungan va')) {
+                    $presentase    = 73;
+                    $tambahanBiaya = $kelasNaik - $kelasHak + ($kelasNaik * $presentase / 100);
+                } elseif (Str::contains(Str::lower($kamarInap->kd_kamar), 'kandungan vb')) {
+                    $presentase    = 43;
+                    $tambahanBiaya = $kelasNaik - $kelasHak + ($kelasNaik * $presentase / 100);
+                } else {
+                    $tambahanBiaya = $kelasNaik - $kelasHak;
+                }
+            } else { 
+                // Jika spesialis dokter bukan kandungan (anak)
+                if (!$altTariKelas1) {
+                    throw new \Exception("Pasien Naik Kelas namun, alt tarif kelas tidak ditemukan");
+                }
+
+                $isVip = $sep->klsnaik == 8;
+                if ($isVip) {
+                    $selisihDenganHasilGroup = $tarif_rs_sum - $cbgTarif;
+                    // Tarif Kelas Naik - Tarif Kelas Hak + (Tarif Kelas Naik * x%) = (Real Cost Rumah Sakit - cbgTariff) atau $selisihDenganHasilGroup
+
+                    // 1. Sederhanakan bagian satu
+                    $satu = $kelasNaik - $kelasHak;
+                    // Jadi, persamaan menjadi : $satu + (Tarif Kelas Naik * x%) = $selisihDenganHasilGroup
+
+                    // 2. pindahkan $satu ke sebelah kanan : (Tarif Kelas Naik * x%) = $selisihDenganHasilGroup - $satu
+                    $dua = $selisihDenganHasilGroup - $satu;
+                    // Jadi, persamaan menjadi : Tarif Kelas Naik * x% = $dua
+
+                    // 3. cari x%
+                    $x = $dua / $kelasNaik;
+                    $xPersen = $x * 100;
+
+                    if ($xPersen >= 75) {
+                        $xPersen = 75;
+                    }
+
+                    // Menghitung tarif tambahan berdasarkan persentase
+                    $tambahanBiaya = $kelasNaik - $kelasHak + ($kelasNaik * $xPersen / 100);
+                } else {
+                    $tambahanBiaya = $kelasNaik - $kelasHak;
+                }
+
+                $presentase = $xPersen ?? 0;
             }
             
 
@@ -612,8 +605,8 @@ class KlaimController extends Controller
                 ['no_sep' => $sep->no_sep], // Kondisi untuk update
                 [
                     'jenis_naik'  => "Naik " . \App\Helpers\NaikKelasHelper::getJumlahNaik($sep->klsrawat, $sep->klsnaik) . " Kelas",
-                    'tarif_1'     => ($tarif_rs_sum > $cbgTarif) ? $tarif_rs_sum : $kelasNaik,
-                    'tarif_2'     => ($tarif_rs_sum > $cbgTarif) ? $cbgTarif : $kelasHak,
+                    'tarif_1'     => $kelasNaik,
+                    'tarif_2'     => $kelasHak,
                     'presentase'  => $presentase ?? null,
                     'tarif_akhir' => $tambahanBiaya,
                     'diagnosa'    => $sep->nmdiagnosaawal,
