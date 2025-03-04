@@ -550,6 +550,8 @@ class KlaimController extends Controller
                 if ($xPersen < 0) {
                     $xPersen = 0;
                     $tambahanBiaya = $tarif_rs_sum - $cbgTarif;
+
+                    $tarif_1 = $tarif_rs_sum;
                 } else {
                     // Jika spesialis dokter adalah kandungan
                     if (Str::contains(Str::lower($regPeriksa->dokter->spesialis->nm_sps), 'kandungan')) {
@@ -557,7 +559,11 @@ class KlaimController extends Controller
                     } else {
                         [$presentase, $tambahanBiaya] = $this->tambahanBiayaAnak($sep, $altTariKelas1, $kelasNaik, $kelasHak, $tarif_rs_sum, $cbgTarif);
                     }
+
+                    $tarif_1 = $kelasNaik;
                 }
+
+                $tarif_2 = $cbgTarif;
             } else {
                 // Jika spesialis dokter adalah kandungan
                 if (Str::contains(Str::lower($regPeriksa->dokter->spesialis->nm_sps), 'kandungan')) {
@@ -565,6 +571,8 @@ class KlaimController extends Controller
                 } else {
                     [$presentase, $tambahanBiaya] = $this->tambahanBiayaAnak($sep, $altTariKelas1, $kelasNaik, $kelasHak, $tarif_rs_sum, $cbgTarif);
                 }
+
+                $tarif_2 = $kelasHak;
             }
 
             $presentase = strpos($presentase, '.') !== false ? number_format($presentase, 5) : $presentase;
@@ -574,8 +582,8 @@ class KlaimController extends Controller
                 ['no_sep' => $sep->no_sep], // Kondisi untuk update
                 [
                     'jenis_naik'  => "Naik " . \App\Helpers\NaikKelasHelper::getJumlahNaik($sep->klsrawat, $sep->klsnaik) . " Kelas",
-                    'tarif_1'     => ($tarif_rs_sum > $cbgTarif) ? $tarif_rs_sum : $kelasNaik,
-                    'tarif_2'     => ($tarif_rs_sum > $cbgTarif) ? $cbgTarif : $kelasHak,
+                    'tarif_1'     => $tarif_1,
+                    'tarif_2'     => $tarif_2,
                     'presentase'  => $presentase ?? null,
                     'tarif_akhir' => $tambahanBiaya,
                     'diagnosa'    => $sep->nmdiagnosaawal,
