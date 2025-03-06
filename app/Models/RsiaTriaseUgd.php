@@ -70,4 +70,9 @@ class RsiaTriaseUgd extends Model
     {
         return $this->hasMany(RsiaDataTriaseUgddetailSkala5::class, 'no_rawat', 'no_rawat');
     }
+
+    public function asmedUgd()
+    {
+        return $this->hasOne(PenilaianMedisIgd::class, 'no_rawat', 'no_rawat');
+    }
 }
