@@ -28,3 +28,7 @@ Route::middleware(['user-aes', 'detail-user', 'claim:role,pegawai|dokter'])->gro
     Route::get('klaim/bupel', [\App\Http\Controllers\RsiaKlaimBupelRsController::class, 'index']);
     Route::post('klaim/bupel', [\App\Http\Controllers\RsiaKlaimBupelRsController::class, 'update']);
 });
+
+Route::middleware(['user-aes', 'detail-user', 'claim:role,pegawai|dokter'])->group(function ($router) {
+    Orion::resource('naik-kelas', \App\Http\Controllers\Orion\NaikKelasController::class)->only(['index', 'show', 'store', 'update', 'destroy'])->parameters(['naik-kelas' => 'no_sep']);
+});
