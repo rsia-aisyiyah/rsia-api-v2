@@ -2,6 +2,8 @@
 
 namespace App\Helpers;
 
+use Illuminate\Support\Str;
+
 class NaikKelasHelper
 {
     public static function translate($kelasNaik) 
@@ -43,15 +45,15 @@ class NaikKelasHelper
 
         $translated = self::translate($klsNaik);
 
-        if ($klsRawat == 1 && \Str::contains($translated, ['VIP', 'Diatas'])) {
+        if ($klsRawat == 1 && Str::contains($translated, ['VIP', 'Diatas'])) {
             return 1;
         }
 
-        if ($klsRawat == 2 && \Str::contains($translated, ['VIP', 'Diatas'])) {
+        if ($klsRawat == 2 && Str::contains($translated, ['VIP', 'Diatas'])) {
             return 2;
         }
 
-        if ($klsRawat == 2 && \Str::contains($translated, ['Kelas I'])) {
+        if ($klsRawat == 2 && Str::contains($translated, ['Kelas I'])) {
             return 1;
         }
 

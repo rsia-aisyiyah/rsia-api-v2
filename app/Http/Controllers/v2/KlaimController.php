@@ -544,6 +544,7 @@ class KlaimController extends Controller
             $kelasHak      = $sep->klsrawat == 2 ? $altTariKelas2 : ($sep->klsrawat == 1 ? $altTariKelas1 : 0);
             $kelasNaik     = $sep->klsnaik  == 3 ? $altTariKelas1 : ($sep->klsnaik == 8 ? $altTariKelas1 : 0);
 
+            $xPersen = $tambahanBiaya = $presentase = null;
 
             if ($tarif_rs_sum > $cbgTarif) {
                 $xPersen = $this->getKoeffisien($tarif_rs_sum, $cbgTarif, $kelasNaik, $kelasHak);
@@ -575,7 +576,7 @@ class KlaimController extends Controller
                 $tarif_2 = $kelasHak;
             }
 
-            $presentase = strpos($presentase, '.') !== false ? number_format($presentase, 5) : $presentase;
+            $presentase = strpos($presentase, '.') != false ? number_format($presentase, 5) : $presentase;
 
             // Simpan data naik kelas
             \App\Models\RsiaNaikKelas::updateOrCreate(
@@ -590,6 +591,11 @@ class KlaimController extends Controller
                 ]
             );
         } catch (\Throwable $th) {
+            \Illuminate\Support\Facades\Log::channel(config('eklaim.log_channel'))->error("CEK NAIK KELAS", [
+                "sep"   => $sep->no_sep,
+                "error" => $th->getMessage(),
+            ]);
+
             return ApiResponse::error($th->getMessage(), 500);
         }
     }
@@ -602,6 +608,8 @@ class KlaimController extends Controller
         }
 
         $isVip = $sep->klsnaik == 8;
+        $xPersen = 0;
+
         if ($isVip) {
             $xPersen = $this->getKoeffisien($tarif_rs_sum, $cbgTarif, $kelasNaik, $kelasHak);
             if ($xPersen >= 75) {
