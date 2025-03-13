@@ -545,14 +545,13 @@ class KlaimController extends Controller
             $kelasNaik     = $sep->klsnaik  == 3 ? $altTariKelas1 : ($sep->klsnaik == 8 ? $altTariKelas1 : 0);
 
             $xPersen = $tambahanBiaya = $presentase = null;
+            $tarif_1 = $kelasNaik;
 
             if ($tarif_rs_sum > $cbgTarif) {
                 $xPersen = $this->getKoeffisien($tarif_rs_sum, $cbgTarif, $kelasNaik, $kelasHak);
                 if ($xPersen < 0) {
                     $xPersen = 0;
-                    $tambahanBiaya = $tarif_rs_sum - $cbgTarif;
-
-                    $tarif_1 = $tarif_rs_sum;
+                    $tambahanBiaya = $kelasNaik - $cbgTarif;
                 } else {
                     // Jika spesialis dokter adalah kandungan
                     if (Str::contains(Str::lower($regPeriksa->dokter->spesialis->nm_sps), 'kandungan')) {
@@ -560,8 +559,6 @@ class KlaimController extends Controller
                     } else {
                         [$presentase, $tambahanBiaya] = $this->tambahanBiayaAnak($sep, $altTariKelas1, $kelasNaik, $kelasHak, $tarif_rs_sum, $cbgTarif);
                     }
-
-                    $tarif_1 = $kelasNaik;
                 }
 
                 $tarif_2 = $cbgTarif;
