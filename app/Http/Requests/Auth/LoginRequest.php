@@ -58,14 +58,17 @@ class LoginRequest extends FormRequest
 
         unset($user->password);
 
-        // attemp auth
-        if (!Auth::login($user, $this->boolean('remember'))) {
+        // Attempt authentication
+        $attempt = Auth::loginUsingId($user->id_user);
+        if (!$attempt) {
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
                 'username' => trans('auth.failed'),
             ]);
         }
+
+        Auth::setUser($user);
 
         RateLimiter::clear($this->throttleKey());
     }

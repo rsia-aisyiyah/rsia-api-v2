@@ -28,11 +28,19 @@ class AuthenticatedSessionController extends Controller
      */
     public function store(LoginRequest $request)
     {
+        // Autentikasi dan proses login sudah ditangani dalam LoginRequest
         $request->authenticate();
 
-        $request->session()->regenerate();
+        // Ambil data client dari session
+        $client = session('client');
+        if ($client) {
+            // Pastikan untuk mengembalikan hasil redirect
+            $route = route('passport.authorizations.authorize', $client);
+            return redirect($route);
+        }
 
-        return redirect()->intended(RouteServiceProvider::HOME);
+        // Setelah login, sudah diarahkan di dalam LoginRequest
+        return redirect()->intended(\App\Providers\RouteServiceProvider::HOME);
     }
 
     /**
