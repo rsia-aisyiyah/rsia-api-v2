@@ -7,7 +7,7 @@
                     <span class="font-bold">Tanggal</span>
                 </td>
                 <td class="border px-2 py-1 text-left leading-none" colspan="5" style="border-color: #333;">
-                    <span class="font-bold">: {{ $triase->tgl_kunjungan }}</span>
+                    <span class="font-bold">: {{ $triase->asmedUgd->tanggal }}</span>
                 </td>
             </tr>
             <tr>

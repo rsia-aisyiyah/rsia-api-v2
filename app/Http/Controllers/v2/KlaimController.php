@@ -544,75 +544,132 @@ class KlaimController extends Controller
             $kelasHak      = $sep->klsrawat == 2 ? $altTariKelas2 : ($sep->klsrawat == 1 ? $altTariKelas1 : 0);
             $kelasNaik     = $sep->klsnaik  == 3 ? $altTariKelas1 : ($sep->klsnaik == 8 ? $altTariKelas1 : 0);
 
-            
-            // Jika spesialis dokter adalah kandungan
-            if (Str::contains(Str::lower($regPeriksa->dokter->spesialis->nm_sps), 'kandungan')) {
-                $kamarInap = \App\Models\KamarInap::where('no_rawat', $sep->no_rawat)
-                    ->where('stts_pulang', '<>', 'Pindah Kamar')
-                    ->latest('tgl_masuk')->latest('jam_masuk')->first();
-                
-                if (!$altTariKelas1) {
-                    throw new \Exception("Pasien Naik Kelas namun, alt tarif kelas tidak ditemukan");
-                }
+            $xPersen = $tambahanBiaya = $presentase = null;
+            $tarif_1 = $kelasNaik;
 
-                if (Str::contains(Str::lower($kamarInap->kd_kamar), 'kandungan va')) {
-                    $presentase    = 73;
-                    $tambahanBiaya = $kelasNaik - $kelasHak + ($kelasNaik * $presentase / 100);
-                } elseif (Str::contains(Str::lower($kamarInap->kd_kamar), 'kandungan vb')) {
-                    $presentase    = 43;
-                    $tambahanBiaya = $kelasNaik - $kelasHak + ($kelasNaik * $presentase / 100);
+            if ($tarif_rs_sum > $cbgTarif) {
+                $xPersen = $this->getKoeffisien($tarif_rs_sum, $cbgTarif, $kelasNaik, $kelasHak);
+                if ($xPersen < 0) {
+                    $xPersen = 0;
+                    $tambahanBiaya = $kelasNaik - $cbgTarif;
                 } else {
-                    $tambahanBiaya = $kelasNaik - $kelasHak;
-                }
-            } else { // Jika spesialis dokter bukan kandungan (anak)
-                if (!$altTariKelas1) {
-                    throw new \Exception("Pasien Naik Kelas namun, alt tarif kelas tidak ditemukan");
-                }
-
-                $isVip = $sep->klsnaik == 8;
-                if ($isVip) {
-                    $selisihDenganHasilGroup = $tarif_rs_sum - $cbgTarif;
-                    // Tarif Kelas Naik - Tarif Kelas Hak + (Tarif Kelas Naik * x%) = (Real Cost Rumah Sakit - cbgTariff) atau $selisihDenganHasilGroup
-
-                    // 1. Sederhanakan bagian satu
-                    $satu = $kelasNaik - $kelasHak;
-                    // Jadi, persamaan menjadi : $satu + (Tarif Kelas Naik * x%) = $selisihDenganHasilGroup
-
-                    // 2. pindahkan $satu ke sebelah kanan : (Tarif Kelas Naik * x%) = $selisihDenganHasilGroup - $satu
-                    $dua = $selisihDenganHasilGroup - $satu;
-                    // Jadi, persamaan menjadi : Tarif Kelas Naik * x% = $dua
-
-                    // 3. cari x%
-                    $x = $dua / $kelasNaik;
-                    $xPersen = $x * 100;
-
-                    if ($xPersen >= 75) {
-                        $xPersen = 75;
+                    // Jika spesialis dokter adalah kandungan
+                    if (Str::contains(Str::lower($regPeriksa->dokter->spesialis->nm_sps), 'kandungan')) {
+                        [$presentase, $tambahanBiaya] = $this->tambahanBiayaKandungan($sep, $altTariKelas1, $kelasNaik, $kelasHak);
+                    } else {
+                        [$presentase, $tambahanBiaya] = $this->tambahanBiayaAnak($sep, $altTariKelas1, $kelasNaik, $kelasHak, $tarif_rs_sum, $cbgTarif);
                     }
-
-                    // Menghitung tarif tambahan berdasarkan persentase
-                    $tambahanBiaya = $kelasNaik - $kelasHak + ($kelasNaik * $xPersen / 100);
-                } else {
-                    $tambahanBiaya = $kelasNaik - $kelasHak;
                 }
 
-                $presentase = $xPersen ?? 0;
+                $tarif_2 = $cbgTarif;
+            } else {
+                // Jika spesialis dokter adalah kandungan
+                if (Str::contains(Str::lower($regPeriksa->dokter->spesialis->nm_sps), 'kandungan')) {
+                    [$presentase, $tambahanBiaya] = $this->tambahanBiayaKandungan($sep, $altTariKelas1, $kelasNaik, $kelasHak);
+                } else {
+                    [$presentase, $tambahanBiaya] = $this->tambahanBiayaAnak($sep, $altTariKelas1, $kelasNaik, $kelasHak, $tarif_rs_sum, $cbgTarif);
+                }
+
+                $tarif_2 = $kelasHak;
             }
+
+            $presentase = strpos($presentase, '.') != false ? number_format($presentase, 5) : $presentase;
 
             // Simpan data naik kelas
             \App\Models\RsiaNaikKelas::updateOrCreate(
                 ['no_sep' => $sep->no_sep], // Kondisi untuk update
                 [
                     'jenis_naik'  => "Naik " . \App\Helpers\NaikKelasHelper::getJumlahNaik($sep->klsrawat, $sep->klsnaik) . " Kelas",
-                    'tarif_1'     => $kelasNaik,
-                    'tarif_2'     => $kelasHak,
+                    'tarif_1'     => $tarif_1,
+                    'tarif_2'     => $tarif_2,
                     'presentase'  => $presentase ?? null,
                     'tarif_akhir' => $tambahanBiaya,
                     'diagnosa'    => $sep->nmdiagnosaawal,
                 ]
             );
         } catch (\Throwable $th) {
+            \Illuminate\Support\Facades\Log::channel(config('eklaim.log_channel'))->error("CEK NAIK KELAS", [
+                "sep"   => $sep->no_sep,
+                "error" => $th->getMessage(),
+            ]);
+
             return ApiResponse::error($th->getMessage(), 500);
         }
+    }
+
+    private function tambahanBiayaAnak($sep, $altTariKelas1, $kelasNaik, $kelasHak, $tarif_rs_sum, $cbgTarif)
+    {
+        // Jika spesialis dokter bukan kandungan (anak)
+        if (!$altTariKelas1) {
+            throw new \Exception("Pasien Naik Kelas namun, alt tarif kelas tidak ditemukan");
+        }
+
+        $isVip = $sep->klsnaik == 8;
+        $xPersen = 0;
+
+        if ($isVip) {
+            $xPersen = $this->getKoeffisien($tarif_rs_sum, $cbgTarif, $kelasNaik, $kelasHak);
+            if ($xPersen >= 75) {
+                $xPersen = 75;
+            }
+
+            // Menghitung tarif tambahan berdasarkan persentase
+            $tambahanBiaya = $kelasNaik - $kelasHak + ($kelasNaik * $xPersen / 100);
+        } else {
+            $tambahanBiaya = $kelasNaik - $kelasHak;
+        }
+
+        $presentase = $xPersen ?? 0;
+
+        return [
+            $presentase,
+            $tambahanBiaya,
+        ];
+    }
+
+    private function tambahanBiayaKandungan($sep, $altTariKelas1, $kelasNaik, $kelasHak)
+    {
+        $kamarInap = \App\Models\KamarInap::where('no_rawat', $sep->no_rawat)
+            ->where('stts_pulang', '<>', 'Pindah Kamar')
+            ->latest('tgl_masuk')->latest('jam_masuk')->first();
+
+        if (!$altTariKelas1) {
+            throw new \Exception("Pasien Naik Kelas namun, alt tarif kelas tidak ditemukan");
+        }
+
+        if (Str::contains(Str::lower($kamarInap->kd_kamar), 'kandungan va')) {
+            $presentase    = 73;
+            $tambahanBiaya = $kelasNaik - $kelasHak + ($kelasNaik * $presentase / 100);
+        } elseif (Str::contains(Str::lower($kamarInap->kd_kamar), 'kandungan vb')) {
+            $presentase    = 43;
+            $tambahanBiaya = $kelasNaik - $kelasHak + ($kelasNaik * $presentase / 100);
+        } else {
+            $tambahanBiaya = $kelasNaik - $kelasHak;
+        }
+
+        return [
+            $presentase,
+            $tambahanBiaya,
+        ];
+    }
+
+    private function getKoeffisien($realCost, $grouppingCost, $kelasNaik, $kelasHak)
+    {
+        $selisihDenganHasilGroup = $realCost - $grouppingCost;
+        // Tarif Kelas Naik - Tarif Kelas Hak + (Tarif Kelas Naik * x%) = (Real Cost Rumah Sakit - cbgTariff) atau $selisihDenganHasilGroup
+
+        // 1. Sederhanakan bagian satu
+        $satu = $kelasNaik - $kelasHak;
+        // Jadi, persamaan menjadi : $satu + (Tarif Kelas Naik * x%) = $selisihDenganHasilGroup
+
+        // 2. pindahkan $satu ke sebelah kanan : (Tarif Kelas Naik * x%) = $selisihDenganHasilGroup - $satu
+        $dua = $selisihDenganHasilGroup - $satu;
+        // Jadi, persamaan menjadi : Tarif Kelas Naik * x% = $dua
+
+        // 3. cari x%
+        $x = $dua / $kelasNaik;
+        $xPersen = $x * 100;
+
+        return $xPersen;
     }
 }

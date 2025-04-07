@@ -214,7 +214,11 @@ class BerkasKlaimController2 extends Controller
             return null;
         }
 
-        $triase = \App\Models\RsiaTriaseUgd::where('no_rawat', $regPeriksa->no_rawat)->first();
+        $triase = \App\Models\RsiaTriaseUgd::with([
+            'asmedUgd' => function ($q) {
+                return $q->select('no_rawat', 'tanggal');
+            },
+        ])->where('no_rawat', $regPeriksa->no_rawat)->first();
 
         if ($triase) {
             $triase = view('berkas-klaim.triase', [
