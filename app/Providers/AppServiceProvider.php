@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use Laravel\Passport\Passport;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -30,17 +31,18 @@ class AppServiceProvider extends ServiceProvider
 
         // ========== CONFIG LOCALE
         config(['app.locale' => 'id']);
-
-        // ========== CARBON LOCALE
-        \Carbon\Carbon::setLocale('id');
-
-        // ========== SET LOCALE
+        
         setlocale(LC_TIME, 'id_ID.utf8');
         setlocale(LC_ALL, 'IND');
+
+        \Carbon\Carbon::setLocale('id');
 
         // ========== FORCE HTTPS
         if($this->app->environment('production')) {
             $this->app['request']->server->set('HTTPS','on');
         }
+
+        // ========== PASSPORT SCOPES
+        Passport::tokensCan(config('passport.scopes'));
     }
 }

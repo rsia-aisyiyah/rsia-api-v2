@@ -48,6 +48,7 @@ Route::middleware(['auth'])->group(function () {
 });
 
 require __DIR__ . '/auth.php';
+require __DIR__ . '/oauth.php';
 
 Route::get('logs', [\Rap2hpoutre\LaravelLogViewer\LogViewerController::class, 'index']);
 // Route::get('/horizon/{view?}', [\App\Http\Controllers\HorizonCustomHomeController::class, 'index'])->where('view', '(.*)')->name('horizon.index');

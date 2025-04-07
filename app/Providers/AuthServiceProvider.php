@@ -27,7 +27,7 @@ class AuthServiceProvider extends ServiceProvider
     {
         $this->registerPolicies();
 
-        \Illuminate\Support\Facades\Auth::provider('aes_user_provider', function ($app, array $config) {
+        \Illuminate\Support\Facades\Auth::provider('aes.user.provider', function ($app, array $config) {
             return new AesUserProvider(new AesHasher(), $config['model']);
         });
 
