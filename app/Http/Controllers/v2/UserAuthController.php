@@ -27,43 +27,35 @@ class UserAuthController extends Controller
         $credentials = $request->validate([
             'username' => 'required|string',
             'password' => 'required|string',
-        ]);
+        ]);        
+        
+        if (\Illuminate\Support\Facades\Auth::attempt($credentials)) {
+            $user = \Illuminate\Support\Facades\Auth::user();
 
-        $user = User::select(
-            DB::raw('AES_DECRYPT(id_user, "' . env('MYSQL_AES_KEY_IDUSER') . '") as id_user'),
-            DB::raw('AES_DECRYPT(id_user, "' . env('MYSQL_AES_KEY_IDUSER') . '") as username'),
-            DB::raw('AES_DECRYPT(password, "' . env('MYSQL_AES_KEY_PASSWORD') . '") as password')
-        )
-            ->where('id_user', DB::raw('AES_ENCRYPT("' . $credentials['username'] . '", "' . env('MYSQL_AES_KEY_IDUSER') . '")'))
-            ->where('password', DB::raw('AES_ENCRYPT("' . $credentials['password'] . '", "' . env('MYSQL_AES_KEY_PASSWORD') . '")'))
-            ->first();
+            // clear attempts
+            $this->clearAttempts($request);
 
-        if (!$user) {
-            $this->incrementAttempts($request);
+            // $scopes = \App\Models\RsiaUserScopes::where('nik', $user->id_user)->get();
+            // $scopes->pluck('scope')->toArray();
+
+            // create token
+            $token      = $user->createToken($credentials['username'])->accessToken;
+            $type       = 'Bearer';
+            $expires_in = $user->tokens->first()->expires_at->timestamp;
+
+            return \App\Helpers\ApiResponse::withToken(true, $token, [
+                'token_type'    => $type,
+                'expires_in'    => $expires_in,
+            ]);
+        } else {
             return \App\Helpers\ApiResponse::error('User not found', 'unauthorized', null, 401);
         }
-
-        // Auth berhasil, bersihkan percobaan login
-        $this->clearAttempts($request);
-        unset($user->password);
-
-        // // user found in database loggin in the user
-        \Illuminate\Support\Facades\Auth::guard('user-aes')->setUser($user);
-
-        $token            = $user->createToken($credentials['username'])->accessToken;
-        $token_type       = 'Bearer';
-        $token_expores_in = $user->tokens->first()->expires_at->diffInSeconds();
-
-        return \App\Helpers\ApiResponse::withToken(true, $token, [
-            'token_type'    => $token_type,
-            'expires_in'    => $token_expores_in,
-        ]);
     }
 
     public function logout()
     {
         // laravel passport revokes the token
-        $user = \Illuminate\Support\Facades\Auth::guard('user-aes')->user();
+        $user = \Illuminate\Support\Facades\Auth::user();
 
         if (!$user) {
             return \App\Helpers\ApiResponse::error('User not found', 'unauthorized', null, 401);
@@ -74,9 +66,10 @@ class UserAuthController extends Controller
         return \App\Helpers\ApiResponse::success('User logged out successfully');
     }
 
-    public function detail()
+    public function detail(Request $request)
     {
-        $user = \Illuminate\Support\Facades\Auth::guard('user-aes')->user();
+        $user = \Illuminate\Support\Facades\Auth::user();
+        
         return new \App\Http\Resources\User\Auth\DetailResource($user);
     }
 }

@@ -66,6 +66,23 @@ class User extends Authenticatable
     ];
 
     /**
+     * Find the user instance for the given username.
+     *
+     * @param  string  $username
+     * @return \App\Models\User
+     */
+    public function findAndValidateForPassport($username, $password)
+    {
+        $query = $this->newModelQuery();
+
+        $query->select(DB::raw('AES_DECRYPT(id_user, "' . env('MYSQL_AES_KEY_IDUSER') . '") as id_user'))
+            ->where('id_user', DB::raw('AES_ENCRYPT("' . $username . '", "' . env('MYSQL_AES_KEY_IDUSER') . '")'))
+            ->where('password', DB::raw('AES_ENCRYPT("' . $password . '", "' . env('MYSQL_AES_KEY_PASSWORD') . '")'));
+
+        return $query->first();
+    }
+
+    /**
      * Specifies the user's FCM tokens
      *
      * @return string|array
