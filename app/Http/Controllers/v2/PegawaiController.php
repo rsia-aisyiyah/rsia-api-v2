@@ -88,17 +88,7 @@ class PegawaiController extends Controller
      * @param  string  $id NIK pegawai. Example: 3.928.0623
      * @return \App\Http\Resources\Pegawai\CompleteResource
      */
-    public function show($id, Request $request)
-    {
-        $select = $request->query('select', '*');
-
-        $pegawai = \App\Models\Pegawai::select(explode(',', $select))->find($id);
-        if (!$pegawai) {
-            return \App\Helpers\ApiResponse::notFound('Resource not found');
-        }
-
-        return \App\Http\Resources\Pegawai\CompleteResource::make($pegawai);
-    }
+    public function show($id, Request $request) {}
 
     /**
      * Menampilkan form untuk mengedit pegawai.
@@ -190,6 +180,23 @@ class PegawaiController extends Controller
         return \App\Helpers\ApiResponse::success('Data deleted successfully');
     }
 
+    public function get(Request $request)
+    {
+        if (!$request->user()) {
+            return \App\Helpers\ApiResponse::unauthorized('Unauthorized');
+        }
+
+        $pegawai = \App\Models\Pegawai::with('dep')
+            ->select('nik', 'nama', 'jk', 'jbtn', 'departemen', 'photo')
+            ->where('nik', $request->user()->id_user)->first();
+
+        if (!$pegawai) {
+            return \App\Helpers\ApiResponse::notFound('Resource not found');
+        }
+
+        return \App\Helpers\ApiResponse::success('Data retrieved successfully', $pegawai);
+    }
+
     public function updateProfile(Request $request)
     {
         $request->validate([
@@ -214,7 +221,7 @@ class PegawaiController extends Controller
                     'no_telp' => $request->no_telp,
                 ]);
 
-                \App\Models\RsiaEmailPegawai::updateOrCreate([ 'nik' => $pegawai->nik ], [
+                \App\Models\RsiaEmailPegawai::updateOrCreate(['nik' => $pegawai->nik], [
                     'email' => $request->email,
                 ]);
 
