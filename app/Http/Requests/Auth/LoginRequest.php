@@ -46,29 +46,13 @@ class LoginRequest extends FormRequest
     {
         $this->ensureIsNotRateLimited();
 
-        $user = $this->getUserData();
-
-        if (!$user) {
-            RateLimiter::hit($this->throttleKey());
-
+        if (!Auth::attempt($this->only('username', 'password'), $this->boolean('remember'))) {
+            RateLimiter::clear($this->throttleKey());
+            
             throw ValidationException::withMessages([
-                'username' => trans('auth.failed'),
+                'email' => __('auth.failed'),
             ]);
         }
-
-        unset($user->password);
-
-        // Attempt authentication
-        $attempt = Auth::loginUsingId($user->id_user);
-        if (!$attempt) {
-            RateLimiter::hit($this->throttleKey());
-
-            throw ValidationException::withMessages([
-                'username' => trans('auth.failed'),
-            ]);
-        }
-
-        Auth::setUser($user);
 
         RateLimiter::clear($this->throttleKey());
     }
@@ -106,22 +90,5 @@ class LoginRequest extends FormRequest
     public function throttleKey()
     {
         return Str::lower($this->input('username')) . '|' . $this->ip();
-    }
-
-    public function getUserData()
-    {
-        $user = \App\Models\User::select(
-            \Illuminate\Support\Facades\DB::raw('AES_DECRYPT(id_user, "' . env('MYSQL_AES_KEY_IDUSER') . '") as id_user'),
-            \Illuminate\Support\Facades\DB::raw('AES_DECRYPT(id_user, "' . env('MYSQL_AES_KEY_IDUSER') . '") as username'),
-            \Illuminate\Support\Facades\DB::raw('AES_DECRYPT(password, "' . env('MYSQL_AES_KEY_PASSWORD') . '") as password')
-        )
-            ->with(['detail' => function ($q) {
-                $q->with('dep')->select('nik', 'nama', 'jbtn', 'departemen', 'bidang');
-            }])
-            ->where('id_user', \Illuminate\Support\Facades\DB::raw('AES_ENCRYPT("' . $this->input('username') . '", "' . env('MYSQL_AES_KEY_IDUSER') . '")'))
-            ->where('password', \Illuminate\Support\Facades\DB::raw('AES_ENCRYPT("' . $this->input('password') . '", "' . env('MYSQL_AES_KEY_PASSWORD') . '")'))
-            ->first();
-
-        return $user;
     }
 }
