@@ -89,7 +89,8 @@ class RsiaSuratInternal extends Model
     
     public function undangan()
     {
-        return $this->hasOne(RsiaUndangan::class, 'surat_id', 'id');
+        return $this->belongsTo(RsiaUndangan::class ,'id','surat_id')
+            ->where('model', RsiaSuratInternal::class);
     }
     
     public function penerima_undangan()
@@ -109,7 +110,14 @@ class RsiaSuratInternal extends Model
 
     public function penanggungJawab()
     {
-        return $this->belongsTo(Pegawai::class, 'pj', 'nik');
+        return $this->belongsTo(Pegawai::class, 'pj', 'nik')
+            ->select('nik', 'nama');
+    }
+
+    public function diajukanOleh()
+    {
+        return $this->belongsTo(Pegawai::class, 'pj', 'nik')
+            ->select('nik', 'nama');
     }
 
     public function penanggungJawabSimple()

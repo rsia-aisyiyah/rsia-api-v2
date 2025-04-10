@@ -45,6 +45,12 @@ class RsiaUndangan extends Model
         'deleted_at' => 'datetime',
     ];
 
+    // hidden
+    protected $hidden = [
+        'id', 'surat_id', 'model', 'pj', 'catatan',
+        'created_at', 'updated_at', 'deleted_at',
+    ];
+
     /**
      * The attributes that are mass assignable.
      *
