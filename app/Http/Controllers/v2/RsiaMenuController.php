@@ -44,15 +44,12 @@ class RsiaMenuController extends Controller
      *
      * @param  int  $id
      * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
      */
     public function show($id, Request $request)
     {
         // get scope from token in request in laravel passport
-        $scope = $request->user()->token()->scopes;
-        $menu = \App\Models\RsiaAppMenu::orderBy('urutan')
-            ->where('client_id', $id)->where('status', 1)
-            ->whereIn('scope', array_merge($scope, ['*', 'all']))
+        $menu = \App\Models\RsiaMasterMenuApi::orderBy('order')
+            ->where('client_id', $id)->where('is_active', 1)
             ->get()->groupBy('group');
 
         return RealDataResource::collection($menu);
