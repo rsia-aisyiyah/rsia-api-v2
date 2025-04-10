@@ -3,7 +3,7 @@
 use Orion\Facades\Orion;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['user-aes', 'claim:role,pegawai'])->prefix('surat')->group(function () {
+Route::middleware(['auth:aes', 'claim:role,pegawai'])->prefix('surat')->group(function () {
 
   // ==================== SURAT INTERNAL  
   Orion::resource('internal', \App\Http\Controllers\Orion\RsiaSuratInternalController::class)->only(['search', 'store', 'show', 'update', 'destroy'])
@@ -20,7 +20,7 @@ Route::middleware(['user-aes', 'claim:role,pegawai'])->prefix('surat')->group(fu
 
 
 // ==================== BERKAS
-Route::middleware(['user-aes', 'claim:role,pegawai'])->prefix('berkas')->group(function () {
+Route::middleware(['auth:aes', 'claim:role,pegawai'])->prefix('berkas')->group(function () {
 
   // ==================== BERKAS PKS
   Orion::resource('pks', \App\Http\Controllers\Orion\RsiaPksController::class)->only('search');
@@ -51,7 +51,7 @@ Route::middleware(['user-aes', 'claim:role,pegawai'])->prefix('berkas')->group(f
 
   
   // ==================== BERKAS KOMITE
-  Route::middleware(['user-aes', 'claim:role,pegawai'])->prefix('komite')->group(function () {
+  Route::middleware(['auth:aes', 'claim:role,pegawai'])->prefix('komite')->group(function () {
     // ==================== BERKAS KOMITE PMKP
     Orion::resource('pmkp', \App\Http\Controllers\Orion\RsiaBerkasKomitePmkpController::class)->only('search');
     Route::apiResource('pmkp', \App\Http\Controllers\v2\RsiaBerkasKomitePmkpController::class)

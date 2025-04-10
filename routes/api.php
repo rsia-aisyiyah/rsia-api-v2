@@ -76,4 +76,4 @@ foreach ($files as $file) {
 }
 
 require_once __DIR__ . '/eklaim-api.php';
-require __DIR__ . '/oauth.php';
+require_once __DIR__ . '/oauth-api.php';

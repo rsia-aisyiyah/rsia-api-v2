@@ -3,7 +3,7 @@
 use Orion\Facades\Orion;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['user-aes', 'claim:role,pegawai|dokter'])->group(function () {
+Route::middleware(['auth:aes', 'claim:role,pegawai|dokter'])->group(function () {
 
   Route::get('pegawai/get', [\App\Http\Controllers\v2\PegawaiController::class, 'get'])->name('pegawai.get');
   
