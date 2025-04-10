@@ -51,11 +51,10 @@ class RsiaSuratInternalController extends \Orion\Http\Controllers\Controller
         $suratData = [
             'perihal'      => $request->perihal,
             'tgl_terbit'   => $request->tgl_terbit,
-            'status'       => $request->status,
             'pj'           => $request->pj,
-            'requested_by' => $this->resolveUser()->id_user,
             'catatan'      => $request->catatan,
             'status'       => $request->status ?? "pengajuan",
+            'requested_by' => $this->resolveUser()->id_user,
         ];
 
         if ($request->status == 'disetujui') {
@@ -96,7 +95,6 @@ class RsiaSuratInternalController extends \Orion\Http\Controllers\Controller
         $suratData = [
             'perihal'      => $request->perihal,
             'tgl_terbit'   => $request->tgl_terbit,
-            'status'       => $request->status,
             'pj'           => $request->pj,
             'catatan'      => $request->catatan,
             'status'       => $request->status ?? "pengajuan",
@@ -155,7 +153,7 @@ class RsiaSuratInternalController extends \Orion\Http\Controllers\Controller
                 'perihal'    => $request->perihal,
                 'lokasi'     => $request->undangan['lokasi'],
                 'deskripsi'  => $request->undangan['deskripsi'],
-                'catatan'    => $request->undangan['catatan'],
+                'catatan'    => $request->catatan,
                 'pj'         => $request->pj,
                 // 'status'     => $request->undangan['status'],
             ];
@@ -182,7 +180,7 @@ class RsiaSuratInternalController extends \Orion\Http\Controllers\Controller
                 'perihal'    => $request->perihal,
                 'lokasi'     => $request->undangan['lokasi'],
                 'deskripsi'  => $request->undangan['deskripsi'],
-                'catatan'    => $request->undangan['catatan'],
+                'catatan'    => $request->catatan,
                 'pj'         => $request->pj,
             ];
 
@@ -214,7 +212,7 @@ class RsiaSuratInternalController extends \Orion\Http\Controllers\Controller
      */
     public function resolveUser()
     {
-        return \Illuminate\Support\Facades\Auth::guard('user-aes')->user();
+        return \Illuminate\Support\Facades\Auth::user();
     }
 
     /**
@@ -254,7 +252,7 @@ class RsiaSuratInternalController extends \Orion\Http\Controllers\Controller
      */
     public function sortableBy(): array
     {
-        return ['penanggungJawabSimple.nama', 'pj', 'tempat', 'no_surat', 'created_at'];
+        return ['penanggungJawab.nama', 'pj', 'tempat', 'no_surat', 'created_at'];
     }
 
     /**
@@ -264,7 +262,7 @@ class RsiaSuratInternalController extends \Orion\Http\Controllers\Controller
      */
     public function alwaysIncludes(): array
     {
-        return ['penanggungJawabSimple'];
+        return ['penanggungJawab', 'diajukanOleh'];
     }
 
     /**
@@ -274,7 +272,7 @@ class RsiaSuratInternalController extends \Orion\Http\Controllers\Controller
      */
     public function includes(): array
     {
-        return ['penerimaUndangan', 'undangan'];
+        return ['penerimaUndangan', 'diajukanOleh', 'undangan'];
     }
 
     /**
