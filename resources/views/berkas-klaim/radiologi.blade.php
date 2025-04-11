@@ -64,7 +64,7 @@
 				<div class="border-t border-b mb-2" style="border-top: 1px solid #333; border-bottom: 1px solid #333;">
 					<h4 class="text-base font-bold">Hasil Pemeriksaan :</h4>
 				</div>
-				<p class="leading-none pb-2">{!! nl2br($item->hasilRadiologi->hasil) !!}</p>
+				<p class="leading-none pb-2">{!! nl2br($item->hasilRadiologi->hasil ?? '') !!}</p>
 			</div>
 		</div>
 
