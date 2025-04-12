@@ -123,17 +123,16 @@ class BerkasKlaimController2 extends Controller
             
             $this->genAsmedUgdPage($bSep->jnspelayanan, $regPeriksa, $barcodeDPJP),                 // RJ
             $this->genCpptPage($bSep->jnspelayanan, $regPeriksa, $pasien),                          // RJ
-            $this->genHasilPemeriksaanUsg($bSep, $regPeriksa, $pasien, $dpjp, $barcodeDPJP),        // RI, RJ
             
+            $this->genHasilPemeriksaanUsg($bSep, $regPeriksa, $pasien, $dpjp, $barcodeDPJP),        // RI, RJ
             $this->pendukung($pendukung, ['usg']),                                                  // RJ
+            $this->genHasilLabPage($bSep, $regPeriksa, $pasien),                                    // RI, RJ
             $this->pendukung($pendukung, ['laborat']),                                              // RJ
             $this->pendukung($pendukung, ['skl']),                                                  // RJ
+            $this->genHasilRadiologiPage($regPeriksa, $pasien, $barcodeDPJP),                       // RI, RJ
             $this->pendukung($pendukung, ['radiologi']),                                                  // RI, RJ
             $this->pendukung($pendukung, ['skl', 'radiologi', 'surat rujukan', 'usg', 'laborat'], true),         // RJ
 
-            $this->genHasilLabPage($bSep, $regPeriksa, $pasien),                                    // RI, RJ
-            $this->genHasilRadiologiPage($regPeriksa, $pasien, $barcodeDPJP),                       // RI, RJ
-            
             $this->genOperasiPage($bSep->no_rawat, $regPeriksa, $barcodeDPJP),                      // RJ
             
             $this->genResepObatPage($regPeriksa, $dpjp, $pasien),                                   // RI, RJ
