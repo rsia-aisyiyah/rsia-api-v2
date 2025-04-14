@@ -114,27 +114,31 @@ class BerkasKlaimController2 extends Controller
         // ==== Generate pages
 
         $pages = collect([
-            $this->genSepPage($bSep, $regPeriksa, $pasien, $barcodeDPJP),
-            $this->genTriaseUgd($bSep->jnspelayanan, $regPeriksa, $barcodeDPJP),
-            $this->genAsmedUgdPage($bSep->jnspelayanan, $regPeriksa, $barcodeDPJP),
-            $this->genResumeMedisPage($bSep, $pasien, $regPeriksa, $barcodeDPJP, $ttdPasien),
-            $this->genCpptPage($bSep->jnspelayanan, $regPeriksa, $pasien),
-            $this->genOperasiPage($bSep->no_rawat, $regPeriksa, $barcodeDPJP),
-            $this->genSpriPage($bSep, $pasien, $barcodeDPJP),
-            $this->genRencanaKontrolPage($bSep, $regPeriksa, $pasien, $barcodeDPJP),
-            $this->pendukung($pendukung, ['skl']),
-            $this->genHasilPemeriksaanUsg($bSep, $regPeriksa, $pasien, $dpjp, $barcodeDPJP),
-            $this->pendukung($pendukung, ['surat rujukan']),
-            $this->pendukung($pendukung, ['usg']),
-            $this->genHasilLabPage($bSep, $regPeriksa, $pasien),
-            $this->genHasilRadiologiPage($regPeriksa, $pasien, $barcodeDPJP),
-            $this->pendukung($pendukung, ['laborat']),
-            $this->pendukung($pendukung, ['skl', 'surat rujukan', 'usg', 'laborat'], true),
-            $this->genResepObatPage($regPeriksa, $dpjp, $pasien),
-            $this->genBillingPage($regPeriksa, $dpjp, $pasien),
-            $this->genKwitansiNaikKelasPage($bSep, $regPeriksa, $pasien, $ttdPasien),
-        ]);
+            $this->genSepPage($bSep, $regPeriksa, $pasien, $barcodeDPJP),                           // RI, RJ
+            $this->genRencanaKontrolPage($bSep, $regPeriksa, $pasien, $barcodeDPJP),                // RI
+            $this->genSpriPage($bSep, $pasien, $barcodeDPJP),                                       // RJ
+            $this->genTriaseUgd($bSep->jnspelayanan, $regPeriksa, $barcodeDPJP),                    // RJ (UGD)
+            $this->pendukung($pendukung, ['surat rujukan']),                                        // RJ (UGD)
+            $this->genResumeMedisPage($bSep, $pasien, $regPeriksa, $barcodeDPJP, $ttdPasien),       // RI, RJ
+            
+            $this->genAsmedUgdPage($bSep->jnspelayanan, $regPeriksa, $barcodeDPJP),                 // RJ
+            $this->genCpptPage($bSep->jnspelayanan, $regPeriksa, $pasien),                          // RJ
+            
+            $this->genHasilPemeriksaanUsg($bSep, $regPeriksa, $pasien, $dpjp, $barcodeDPJP),        // RI, RJ
+            $this->pendukung($pendukung, ['usg']),                                                  // RJ
+            $this->genHasilLabPage($bSep, $regPeriksa, $pasien),                                    // RI, RJ
+            $this->pendukung($pendukung, ['laborat']),                                              // RJ
+            $this->pendukung($pendukung, ['skl']),                                                  // RJ
+            $this->genHasilRadiologiPage($regPeriksa, $pasien, $barcodeDPJP),                       // RI, RJ
+            $this->pendukung($pendukung, ['radiologi']),                                                  // RI, RJ
+            $this->pendukung($pendukung, ['skl', 'radiologi', 'surat rujukan', 'usg', 'laborat'], true),         // RJ
 
+            $this->genOperasiPage($bSep->no_rawat, $regPeriksa, $barcodeDPJP),                      // RJ
+            
+            $this->genResepObatPage($regPeriksa, $dpjp, $pasien),                                   // RI, RJ
+            $this->genBillingPage($regPeriksa, $dpjp, $pasien),                                      // RI, RJ
+            $this->genKwitansiNaikKelasPage($bSep, $regPeriksa, $pasien, $ttdPasien),               // RI
+        ]);
 
         // ==== Filter pages
 
@@ -210,9 +214,9 @@ class BerkasKlaimController2 extends Controller
      */
     public function genTriaseUgd($jenisPelayanan, $regPeriksa, $barcodeDPJP)
     {
-        if ($jenisPelayanan == 1) {
-            return null;
-        }
+        // if ($jenisPelayanan == 1) {
+        //    return null;
+        // }
 
         $triase = \App\Models\RsiaTriaseUgd::with([
             'asmedUgd' => function ($q) {
@@ -229,6 +233,8 @@ class BerkasKlaimController2 extends Controller
 
             return $triase;
         }
+
+	return null;
     }
 
     /**

@@ -552,6 +552,7 @@ class KlaimController extends Controller
                 if ($xPersen < 0) {
                     $xPersen = 0;
                     $tambahanBiaya = $kelasNaik - $cbgTarif;
+		    $presentase = null;
                 } else {
                     // Jika spesialis dokter adalah kandungan
                     if (Str::contains(Str::lower($regPeriksa->dokter->spesialis->nm_sps), 'kandungan')) {
@@ -573,7 +574,9 @@ class KlaimController extends Controller
                 $tarif_2 = $kelasHak;
             }
 
-            $presentase = strpos($presentase, '.') != false ? number_format($presentase, 5) : $presentase;
+            if (!is_null($presentase) && strpos($presentase, '.') != false) {
+                $presentase = number_format($presentase, 5);
+            }
 
             // Simpan data naik kelas
             \App\Models\RsiaNaikKelas::updateOrCreate(
@@ -591,6 +594,8 @@ class KlaimController extends Controller
             \Illuminate\Support\Facades\Log::channel(config('eklaim.log_channel'))->error("CEK NAIK KELAS", [
                 "sep"   => $sep->no_sep,
                 "error" => $th->getMessage(),
+        	"file"  => $th->getFile(),
+        	"line"  => $th->getLine(),
             ]);
 
             return ApiResponse::error($th->getMessage(), 500);
@@ -644,6 +649,7 @@ class KlaimController extends Controller
             $presentase    = 43;
             $tambahanBiaya = $kelasNaik - $kelasHak + ($kelasNaik * $presentase / 100);
         } else {
+	    $presentase = null;
             $tambahanBiaya = $kelasNaik - $kelasHak;
         }
 
