@@ -10,9 +10,6 @@ class RsiaPenerimaUndanganController extends \Orion\Http\Controllers\Controller
 
     protected $model = \App\Models\RsiaPenerimaUndangan::class;
 
-    // collection
-    protected $collectionResource = \App\Http\Resources\PenerimaUndanganWithKehadiranCollection::class;
-
     /**
      * Retrieves currently authenticated user based on the guard.
      *
@@ -20,7 +17,7 @@ class RsiaPenerimaUndanganController extends \Orion\Http\Controllers\Controller
      */
     public function resolveUser()
     {
-        return \Illuminate\Support\Facades\Auth::guard('user-aes')->user();
+        return \Illuminate\Support\Facades\Auth::user();
     }
 
     /**
@@ -30,7 +27,7 @@ class RsiaPenerimaUndanganController extends \Orion\Http\Controllers\Controller
      */
     public function sortableBy(): array
     {
-        return ['no_surat', 'penerima', 'tipe', 'model', 'created_at', 'updated_at'];
+        return ['undangan_id', 'penerima', 'tipe', 'model', 'created_at', 'updated_at', 'detail.nama'];
     }
 
     /**
@@ -40,7 +37,7 @@ class RsiaPenerimaUndanganController extends \Orion\Http\Controllers\Controller
      */
     public function filterableBy(): array
     {
-        return ['no_surat', 'penerima', 'tipe', 'model'];
+        return ['undangan_id', 'penerima', 'tipe', 'model'];
     }
 
     /**
@@ -50,7 +47,7 @@ class RsiaPenerimaUndanganController extends \Orion\Http\Controllers\Controller
      */
     public function searchableBy(): array
     {
-        return ['no_surat', 'penerima', 'tipe', 'model', 'detail.nik', 'detail.nama', 'detail.jbtn', 'detail.departemen'];
+        return ['undangan_id', 'penerima', 'tipe', 'model', 'detail.nik', 'detail.nama', 'detail.jbtn', 'detail.departemen'];
     }
 
     /**
@@ -60,6 +57,6 @@ class RsiaPenerimaUndanganController extends \Orion\Http\Controllers\Controller
      * */
     public function includes(): array
     {
-        return ['detail', 'detail.dep'];
+        return ['detail', 'detail.dep', 'kehadiran'];
     }
 }

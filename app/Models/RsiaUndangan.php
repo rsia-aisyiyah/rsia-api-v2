@@ -46,10 +46,9 @@ class RsiaUndangan extends Model
     ];
 
     // hidden
-    protected $hidden = [
-        'id', 'surat_id', 'model', 'pj', 'catatan',
-        'created_at', 'updated_at', 'deleted_at',
-    ];
+    // protected $hidden = [
+    //     'id', 'surat_id'
+    // ];
 
     /**
      * The attributes that are mass assignable.
@@ -68,17 +67,31 @@ class RsiaUndangan extends Model
 
     
     /**
-     * Get the pegawai that owns the RsiaUndangan
-     *
+     * Get the penanggungJawab that owns the RsiaUndangan
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function pegawai()
+    public function penanggungJawab()
     {
-        return $this->belongsTo(Pegawai::class, 'pj', 'nik');
+        return $this->belongsTo(Pegawai::class, 'pj', 'nik')
+            ->select('nik', 'nama', 'jbtn', 'jnj_jabatan');
     }
 
-    public function penerima()
+    /**
+     * Get the peserta the RsiaUndangan
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function peserta()
     {
-        return $this->hasMany(RsiaPenerimaUndangan::class, 'id', 'id')->select('penerima', 'updated_at')->with('pegawai');
+        return $this->hasMany(RsiaPenerimaUndangan::class, 'undangan_id', 'id')
+            ->select('undangan_id', 'penerima', 'updated_at');
+    }
+    
+    /**
+     * Get the surat that owns the RsiaUndangan
+     * @return \Illuminate\Database\Eloquent\Relations\MorphTo
+     */
+    public function surat()
+    {
+        return $this->morphTo(__FUNCTION__, 'model', 'surat_id');
     }
 }
