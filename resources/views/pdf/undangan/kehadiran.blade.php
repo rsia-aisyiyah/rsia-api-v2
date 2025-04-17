@@ -33,34 +33,32 @@
             <tr>
                 <td>Perihal</td>
                 <td style="max-width: 10px;">:</td>
-                <td>{{ $surat->perihal }}</td>
+                <td>{{ $undangan->perihal }}</td>
             </tr>
             <tr>
                 <td>Tempat</td>
                 <td style="max-width: 10px;">:</td>
-                <td>{{ $surat->tempat }}</td>
+                <td>{{ $undangan->lokasi }}</td>
             </tr>
             <tr>
                 <td>Agenda</td>
                 <td style="max-width: 10px;">:</td>
-                <td>{{ \Carbon\Carbon::parse($surat->tanggal)->translatedFormat('l, d F Y H:i') }}</td>
+                <td>{{ \Carbon\Carbon::parse($undangan->tanggal)->translatedFormat('l, d F Y H:i') }}</td>
             </tr>
             <tr>
                 <td>Penanggung Jawab</td>
                 <td style="max-width: 10px;">:</td>
-                <td>{{ $surat->penanggungJawabSimple->nama }}</td>
+                <td>{{ $undangan->penanggungJawab->nama }}</td>
             </tr>
         </table>
 
         <div class="mt-4">
-            <p class="text-xs italic leading-none" style="color: gray">Dokumen ini dibuat secara otomatis oleh sistem
-            </p>
-            <p class="text-xs italic leading-none" style="color: gray">Semua bukti kehadiran yang tertera diatas adalah
-                benar dan tidak bisa diubah</p>
+            <p class="text-xs italic leading-none" style="color: gray">Dokumen ini dibuat secara otomatis oleh sistem</p>
+            <p class="text-xs italic leading-none" style="color: gray">Semua bukti kehadiran yang tertera diatas adalah benar dan tidak bisa diubah</p>
         </div>
 
         {{-- daftar karyawan hadir loop $penerima --}}
-        <table class="mt-4 w-full">
+        <table class="mt-2 w-full">
             <tr class="border-b-2 font-bold p-2" style="background-color: #d1d1d1;">
                 <td class="py-1 px-2" style="border: 1px solid #d1d1d1">No</td>
                 <td class="py-1 px-2" style="border: 1px solid #d1d1d1">Nama</td>
@@ -70,9 +68,9 @@
             @foreach ($penerima as $item)
             <tr>
                 <td class="px-2 py-1" style="border-bottom: 1px solid #d1d1d1;">{{ $loop->iteration }}.</td>
-                <td class="px-2 py-1" style="border-bottom: 1px solid #d1d1d1;">{{ $item->detail->nama }}</td>
-                <td class="px-2 py-1" style="border-bottom: 1px solid #d1d1d1;">{{ $item->detail->dep->nama }}</td>
-                <td class="px-2 py-1" style="border-bottom: 1px solid #d1d1d1;">{{ $kehadiran->where('nik', $item->penerima)->first()->created_at ?? "-" }}
+                <td class="px-2 py-1" style="border-bottom: 1px solid #d1d1d1;">{{ $item->pegawai->nama ?? '-' }}</td>
+                <td class="px-2 py-1" style="border-bottom: 1px solid #d1d1d1;">{{ $item->pegawai->jbtn }}</td>
+                <td class="px-2 py-1 whitespace-nowrap" style="border-bottom: 1px solid #d1d1d1;">{{ $item->kehadiran ? $item->kehadiran->created_at->translatedFormat('d M Y H:i') : '-' }}</td>
                 </td>
             </tr>
             @endforeach
