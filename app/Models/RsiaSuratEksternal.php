@@ -36,24 +36,27 @@ class RsiaSuratEksternal extends Model
 
     protected $table = 'rsia_surat_eksternal';
 
-    protected $primaryKey = 'no_surat';
-
-    protected $keyType = 'string';
+    protected $primaryKey = 'id';
 
     protected $casts = [
-        'no_surat' => 'string',
+        'no_surat'   => 'string',
+        'tgl_terbit' => 'date',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+        'deleted_at' => 'datetime',
     ];
 
     protected $guarded = [];
 
-    public $incrementing = false;
+    public $incrementing = true;
 
-    public $timestamps = false;
+    public $timestamps = true;
 
 
     public function penanggungJawab()
     {
-        return $this->belongsTo(Pegawai::class, 'pj', 'nik');
+        return $this->belongsTo(Pegawai::class, 'pj', 'nik')
+            ->select('nik', 'nama', 'jbtn', 'departemen', 'bidang', 'jnj_jabatan');
     }
 
     public function penanggungJawabSimple()

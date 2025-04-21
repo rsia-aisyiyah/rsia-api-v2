@@ -10,7 +10,7 @@ Route::middleware(['auth:aes', 'claim:role,pegawai'])->prefix('surat')->group(fu
     ->parameters(['internal' => 'id']);
 
   // ==================== SURAT EKSTERNAL
-  Orion::resource('eksternal', \App\Http\Controllers\Orion\RsiaSuratEksternalController::class)->only(['search', 'store', 'show', 'update'])
+  Orion::resource('eksternal', \App\Http\Controllers\Orion\RsiaSuratEksternalController::class)->only(['index', 'search', 'store', 'show', 'update'])
     ->parameters(['eksternal' => 'base64_nomor_surat']);
 
   // ==================== SURAT MASUK
