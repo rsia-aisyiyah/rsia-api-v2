@@ -46,9 +46,8 @@ Route::middleware(['auth:aes', 'claim:role,pegawai'])->prefix('berkas')->group(f
 
 
   // ==================== SPO
-  Orion::resource('spo', \App\Http\Controllers\Orion\RsiaSpoController::class)->parameters(['spo' => 'nomor']);
-
-
+  Orion::resource('spo', \App\Http\Controllers\Orion\RsiaSpoController::class);
+  Route::get('spo/{spo}/units', [\App\Http\Controllers\v2\SpoUnitsController::class,'index'])->name('spo.units.index');
   
   // ==================== BERKAS KOMITE
   Route::middleware(['auth:aes', 'claim:role,pegawai'])->prefix('komite')->group(function () {
