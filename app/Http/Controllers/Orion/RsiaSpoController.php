@@ -49,9 +49,11 @@ class RsiaSpoController extends \Orion\Http\Controllers\Controller
      */
     protected function performStore(Request $request, \Illuminate\Database\Eloquent\Model $e, array $attributes): void
     {
+        $dir = \App\Models\Pegawai::where('jnj_jabatan', 'RS1')->pluck('nik');
         $spoData = [
             'status'       => $request->status ?? "pengajuan",
             'judul'        => $request->judul,
+            'direktur_id'  => $dir,
             'tgl_terbit'   => $request->tgl_terbit,
             'unit_id'      => $request->unit_id,
             'jenis'        => $request->jenis,
@@ -61,6 +63,7 @@ class RsiaSpoController extends \Orion\Http\Controllers\Controller
             'prosedur'     => $request->prosedur,
         ];
 
+        // TODO : sesuaikan status dengan verifikasi sesuai departemen
         if ($spoData['status'] == 'disetujui') {
             $lastNomor = $this->model::whereYear('tgl_terbit', $request->tgl_terbit)
                 ->where('jenis', $request->jenis)
@@ -101,6 +104,7 @@ class RsiaSpoController extends \Orion\Http\Controllers\Controller
         $spoData = [
             'status'       => $request->status ?? "pengajuan",
             'judul'        => $request->judul,
+            // 'direktur_id'  => $dir->nik,
             'tgl_terbit'   => $request->tgl_terbit,
             'unit_id'      => $request->unit,
             'jenis'        => $request->jenis,
@@ -109,14 +113,15 @@ class RsiaSpoController extends \Orion\Http\Controllers\Controller
             'kebijakan'    => \Stevebauman\Purify\Facades\Purify::clean($request->kebijakan),
             'prosedur'     => \Stevebauman\Purify\Facades\Purify::clean($request->prosedur),
         ];
-
+        
+        // TODO : sesuaikan status dengan verifikasi sesuai departemen
         if ($request->status == 'disetujui' && !$e->nomor) {
             $lastNomor = $this->model::whereYear('tgl_terbit', $request->tgl_terbit)
-                ->where('jenis', $request->jenis)
-                ->where('no_surat', "<>", null)
-                ->orderBy('created_at', 'desc')
-                ->first();
-
+            ->where('jenis', $request->jenis)
+            ->where('no_surat', "<>", null)
+            ->orderBy('created_at', 'desc')
+            ->first();
+            
             if ($lastNomor) {
                 $lastNomor    = explode('/', $lastNomor->nomor);
                 $lastNomor[0] = str_pad(($lastNomor[0] + 1), 3, '0', STR_PAD_LEFT);
@@ -130,8 +135,13 @@ class RsiaSpoController extends \Orion\Http\Controllers\Controller
                     \Carbon\Carbon::parse($request->tgl_terbit)->format('dmy'),
                 ]);
             }
-
+            
             $spoData['nomor'] = $lastNomor;
+        }
+        
+        if (!$e->direktur_id) {
+            $dir = \App\Models\Pegawai::where('jnj_jabatan', 'RS1')->first();
+            $spoData['direktur_id'] = $dir->nik;
         }
 
         $this->performFill($request, $e, $spoData);
@@ -275,7 +285,7 @@ class RsiaSpoController extends \Orion\Http\Controllers\Controller
      */
     public function includes(): array
     {
-        return ['unit', 'units', 'units.unit'];
+        return ['unit', 'units', 'units.unit', 'direktur'];
     }
 
     /**
@@ -285,6 +295,6 @@ class RsiaSpoController extends \Orion\Http\Controllers\Controller
      * */
     public function alwaysIncludes(): array
     {
-        return ['unit'];
+        return ['unit', 'direktur'];
     }
 }

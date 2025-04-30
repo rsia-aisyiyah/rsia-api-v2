@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string $nomor
  * @property string $status
  * @property string $judul
+ * @property string $direktur_id
  * @property string $tgl_terbit
  * @property string $unit_id
  * @property string $jenis
@@ -58,9 +59,13 @@ class RsiaSpo extends Model
     {
         return $this->hasMany(RsiaSpoUnits::class, 'spo_id', 'id');
     }
-
     public function unit()
     {
         return $this->belongsTo(Departemen::class, 'unit_id', 'dep_id');
+    }
+
+    public function direktur()
+    {
+        return $this->belongsTo(Pegawai::class, 'direktur_id', 'nik');
     }
 }
