@@ -39,7 +39,7 @@
                         <th class="text-left" style="width: 100px;">Nomor</th>
                         <td style="width: 50px;">:</td>
                         <td>
-                            <?= $nomor ?>
+                            <?= $undangan->surat->no_surat ?? "-" ?>
                         </td>
                     </tr>
                     <tr>
@@ -59,15 +59,15 @@
 
             <div class="mb-3 mt-4">
                 <span class="p-0 m-0">Kepada Yth.</span>
-                @if (count($penerima) <= 5) <ol class="mr-2"
-                    style="list-style-type: decimal; padding-inline-start: 20px;">
-                    @foreach ($penerima as $key => $item)
-                    <li>{{ $item->pegawai->nama }}</li>
-                    @endforeach
+                @if (count($penerima) <= 5) 
+                    <ol style="list-style-type: decimal; padding-left: 28px;">
+                        @foreach ($penerima as $key => $item)
+                            <li>{{ $item->pegawai->nama }}</li>
+                        @endforeach
                     </ol>
-                    @else
+                @else
                     <p>Nama-nama terlampir</p>
-                    @endif
+                @endif
             </div>
 
             <p class="mb-1">
@@ -98,7 +98,7 @@
                         <tr>
                             <th style="width: 100px; padding-bottom: 5px;" class="text-left">Tempat</th>
                             <td style="width: 20px;">:</td>
-                            <td>{{ $undangan->tempat }}</td>
+                            <td>{{ $undangan->lokasi }}</td>
                         </tr>
                         <tr>
                             <th style="width: 100px; padding-bottom: 5px;" class="text-left">Acara</th>
@@ -121,9 +121,7 @@
                     <td class="p-0 m-0" style="width:32%;"></td>
                     <td class="p-0 m-0 text-center">
                         <p class="mb-0 pb-0">Pekalongan, {{ \Carbon\Carbon::now()->isoFormat('D MMMM Y') }}</p>
-                        {{-- $undangan->penanggungJawab->jenjang_jabatan->nama is capital make is cammel case--}}
-                        <p class="mb-0 pb-0" style="font-weight: bold; text-transform: capitalize;">{{
-                            strtolower($undangan->penanggungJawab->jenjang_jabatan->nama) }}</p>
+                        <p class="mb-0 pb-0" style="font-weight: bold; text-transform: capitalize;">{{ strtolower($undangan->penanggungJawab->jenjang_jabatan->nama) }}</p>
                         <br /><br /><br /><br /><br /><br />
                         <p class="mb-0 pb-0" style="font-weight: bold">{{ $undangan->penanggungJawab->nama }}</p>
                     </td>
@@ -155,12 +153,14 @@
 
             <div class="mt-4">
                 <table class="table table-sm w-full">
-                    <tr>
-                        <th class="px-2 py-2 text-left" style="background: #d1d1d1;">No.</th>
-                        <th class="px-2 py-2 text-left" style="background: #d1d1d1;">Nama</th>
-                        <th class="px-2 py-2 text-left" style="background: #d1d1d1;">Jabatan</th>
-                        <th class="px-2 py-2 text-left" style="background: #d1d1d1;">Departemen</th>
-                    </tr>
+                    <thead>
+                        <tr>
+                            <th class="px-2 py-2 text-left" style="background: #d1d1d1;">No.</th>
+                            <th class="px-2 py-2 text-left" style="background: #d1d1d1;">Nama</th>
+                            <th class="px-2 py-2 text-left" style="background: #d1d1d1;">Jabatan</th>
+                            <th class="px-2 py-2 text-left" style="background: #d1d1d1;">Departemen</th>
+                        </tr>
+                    </thead>
                     <tbody>
                         @foreach ($penerima as $key => $item)
                         <tr>
@@ -179,7 +179,7 @@
         <div>
             <div style="page-break-before: always;"></div>
 
-            <?php $maxRow = 25 ?>
+            <?php $maxRow = 20 ?>
 
             <h5 class="text-center" style="font-family: 'Times New Roman', Times, serif; font-weight: bold;">
                 <u>DAFTAR HADIR</u>
@@ -207,25 +207,26 @@
                     </small>
                 </div>
                 <table class="table table-bordered table-sm w-full">
-                    <tr>
-                        <th class="px-2 py-1" style="background: #d1d1d1; width: 50px;">No.</th>
-                        <th class="px-2 py-1" style="background: #d1d1d1;">Nama</th>
-                        <th class="px-2 py-1" style="background: #d1d1d1;">Departemen</th>
-                        <th class="px-2 py-1" style="background: #d1d1d1; width: 30%;">TTD</th>
-                    </tr>
+                    <thead>
+                        <tr>
+                            <th class="px-2 py-1" style="background: #d1d1d1; width: 50px;">No.</th>
+                            <th class="px-2 py-1" style="background: #d1d1d1;">Nama</th>
+                            <th class="px-2 py-1" style="background: #d1d1d1;">Departemen</th>
+                            <th class="px-2 py-1" style="background: #d1d1d1; width: 30%;">TTD</th>
+                        </tr>
+                    </thead>
                     <tbody>
                         @foreach ($penerima as $key => $item)
                         <tr>
-                            <td style="border-bottom: 1px solid #d1d1d1; padding-top: 5px; padding-bottom: 5px; border-left: 1px solid #d1d1d1;" class=" text-center">{{ $key + 1 }}.</td>
+                            <td style="border-bottom: 1px solid #d1d1d1; padding-top: 5px; padding-bottom: 5px; border-left: 1px solid #d1d1d1;" class="text-center">{{ $key + 1 }}.</td>
                             <td style="border-bottom: 1px solid #d1d1d1; padding-top: 5px; padding-bottom: 5px; border-left: 1px solid #d1d1d1;" class="px-2">
                                 <p>{{ $item->pegawai->nama }}</p>
                             </td>
                             {{-- if in jbtn contain koordinator change to koor --}}
                             <td style="border-bottom: 1px solid #d1d1d1; padding-top: 5px; padding-bottom: 5px; border-left: 1px solid #d1d1d1;" class="px-2">
-                                {{ $item->pegawai->dep->nama }}
+                                {{ $item->pegawai->jbtn }}
                             </td>
                             <td style="border-bottom: 1px solid #d1d1d1; padding-top: 5px; padding-bottom: 5px; border-left: 1px solid #d1d1d1; border-right: 1px solid #d1d1d1;" class="px-2 {{ $key % 2 != 0 ? 'text-center' : '' }}">
-                                <br>
                                 <p style="width: 100%;">{{ $key + 1 }}.</p>
                             </td>
                         </tr>
@@ -248,7 +249,7 @@
                                             <br><br><br>
                                         </div>
                                     </td>
-                                    <td style="border-bottom: 1px solid #d1d1d1; padding-top: 5px; padding-bottom: 5px; border-left: 1px solid #d1d1d1; border-right: 1px solid #d1d1d1;" class="px-2 {{ ($i + count($penerima)) % 2 == 0 ? 'text-center' : '' }}">
+                                    <td style="border-bottom: 1px solid #d1d1d1; padding-top: 5px; padding-bottom: 5px; border-left: 1px solid #d1d1d1; border-right: 1px solid #d1d1d1;" class="px-2 {{ ($i + count($penerima)) % 2 == 0 ? '' : 'text-center' }}">
                                         <div>{{ $i + count($penerima) + 1 }}.</div>
                                     </td>
                                 </tr>
@@ -269,7 +270,7 @@
                                             <br><br><br>
                                         </div>
                                     </td>
-                                    <td style="border-bottom: 1px solid #d1d1d1; padding-top: 5px; padding-bottom: 5px; border-left: 1px solid #d1d1d1; border-right: 1px solid #d1d1d1;" class="px-2 {{ ($i + count($penerima)) % 2 == 0 ? 'text-center' : '' }}">
+                                    <td style="border-bottom: 1px solid #d1d1d1; padding-top: 5px; padding-bottom: 5px; border-left: 1px solid #d1d1d1; border-right: 1px solid #d1d1d1;" class="px-2 {{ ($i + count($penerima)) % 2 == 0 ? '' : 'text-center' }}">
                                         <p>{{ $i + count($penerima) + 1 }}.</p>
                                     </td>
                                 </tr>

@@ -18,7 +18,7 @@ class DepartemenController extends \Orion\Http\Controllers\Controller
      */
     public function resolveUser()
     {
-        return \Illuminate\Support\Facades\Auth::guard('user-aes')->user();
+        return \Illuminate\Support\Facades\Auth::user();
     }
 
     /**
@@ -29,6 +29,16 @@ class DepartemenController extends \Orion\Http\Controllers\Controller
     public function filterableBy(): array
     {
         return ['nama', 'dep_id', 'aktif'];
+    }
+
+    /**
+     * The attributes that are used for sorting.
+     *
+     * @return array
+     */
+    public function sortableBy(): array
+    {
+        return ['dep_id', 'nama', 'kelompok'];
     }
 
     /**

@@ -41,9 +41,14 @@ return [
             'provider' => 'users',
         ],
 
+        'aes' => [
+            'driver' => 'passport',
+            'provider' => 'aes',
+        ],
+
         'user-aes' => [
             'driver' => 'passport',
-            'provider' => 'user-aes',
+            'provider' => 'aes.user',
         ],
 
         'pasien' => [
@@ -72,14 +77,16 @@ return [
     'providers' => [
         'users' => [
             // 'driver' => 'eloquent',
-            // INFO : PANTAI DAN PELAJARI
-            'driver' => 'aes_user_provider',
+            'driver' => 'aes.user.provider',
             'model' => App\Models\User::class,
             'column' => ['id_user', 'password']
         ],
 
-        'user-aes' => [
-            'driver' => 'aes_user_provider',
+        // AES yang dimaksud adalah AES Encryption dan decryption pada MySQL
+        // https://dev.mysql.com/doc/refman/8.0/en/encryption-functions.html#function_aes-encrypt
+        // https://dev.mysql.com/doc/refman/8.0/en/encryption-functions.html#function_aes-decrypt
+        'aes' => [
+            'driver' => 'aes.user.provider',
             'model' => App\Models\User::class,
             'column' => ['id_user', 'password'],
         ],

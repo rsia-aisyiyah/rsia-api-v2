@@ -215,7 +215,7 @@ class BerkasKlaimController2 extends Controller
     public function genTriaseUgd($jenisPelayanan, $regPeriksa, $barcodeDPJP)
     {
         // if ($jenisPelayanan == 1) {
-        //    return null;
+        //     return null;
         // }
 
         $triase = \App\Models\RsiaTriaseUgd::with([
@@ -234,7 +234,7 @@ class BerkasKlaimController2 extends Controller
             return $triase;
         }
 
-	return null;
+        return null;
     }
 
     /**

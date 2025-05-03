@@ -28,7 +28,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  */
 class RsiaKehadiranRapat extends Model
 {
-    use HasCompositeKey, Compoships;
+    use Compoships;
 
     protected $table = 'rsia_kehadiran_rapat';
 
@@ -43,5 +43,10 @@ class RsiaKehadiranRapat extends Model
     public function pegawai()
     {
         return $this->belongsTo(Pegawai::class, 'nik', 'nik')->select('nik', 'nama');
+    }
+
+    public function penerima_undangan()
+    {
+        return $this->belongsTo(RsiaPenerimaUndangan::class, ['nik', 'undangan_id'], ['penerima', 'undangan_id']);
     }
 }

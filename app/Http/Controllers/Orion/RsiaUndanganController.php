@@ -13,18 +13,7 @@ class RsiaUndanganController extends Controller
     /**
      * Fully-qualified model class name
      */
-    protected $model = \App\Models\RsiaPenerimaUndangan::class;
-
-    /**
-     * @var string $resource
-     */
-    protected $resource = \App\Http\Resources\Undangan\UndanganResource::class;
-
-    /**
-     * @var string $collectionResource
-     */
-    protected $collectionResource = \App\Http\Resources\Undangan\UndanganCollection::class;
-
+    protected $model = \App\Models\RsiaUndangan::class;
 
     /**
      * Builds Eloquent query for fetching entities in index method.
@@ -33,13 +22,13 @@ class RsiaUndanganController extends Controller
      * @param array $requestedRelations
      * @return Builder
      */
-    protected function buildIndexFetchQuery(\Orion\Http\Requests\Request $request, array $requestedRelations): \Illuminate\Database\Eloquent\Builder
-    {
-        $query = parent::buildIndexFetchQuery($request, $requestedRelations);
-        $query->select(['no_surat', 'model'])->groupBy('no_surat', 'model');
+    // protected function buildIndexFetchQuery(\Orion\Http\Requests\Request $request, array $requestedRelations): \Illuminate\Database\Eloquent\Builder
+    // {
+    //     $query = parent::buildIndexFetchQuery($request, $requestedRelations);
+    //     $query->select(['no_surat', 'model'])->groupBy('no_surat', 'model');
 
-        return $query;
-    }
+    //     return $query;
+    // }
 
     /**
      * Runs the given query for fetching entities in index method.
@@ -48,15 +37,14 @@ class RsiaUndanganController extends Controller
      * @param Builder $query
      * @param int $paginationLimit
      * @return Paginator|Collection
-     * @throws BindingResolutionException
      */
-    protected function runIndexFetchQuery(Request $request, \Illuminate\Database\Eloquent\Builder $query, int $paginationLimit)
-    {
-        $searchTerm = $request->input('search.value', '');
-        $query      = $query->searchByRelatedModel($searchTerm);
+    // protected function runIndexFetchQuery(Request $request, \Illuminate\Database\Eloquent\Builder $query, int $paginationLimit)
+    // {
+    //     $searchTerm = $request->input('search.value', '');
+    //     $query      = $query->searchByRelatedModel($searchTerm);
 
-        return $this->shouldPaginate($request, $paginationLimit) ? $query->paginate($paginationLimit) : $query->get();
-    }
+    //     return $this->shouldPaginate($request, $paginationLimit) ? $query->paginate($paginationLimit) : $query->get();
+    // }
 
     /**
      * The list of available query scopes.
@@ -65,7 +53,8 @@ class RsiaUndanganController extends Controller
      */
     public function exposedScopes(): array
     {
-        return ['scopeSearchByRelatedModel'];
+        // return ['scopeSearchByRelatedModel'];
+        return [];
     }
 
     /**
@@ -75,7 +64,7 @@ class RsiaUndanganController extends Controller
      */
     public function resolveUser()
     {
-        return \Illuminate\Support\Facades\Auth::guard('user-aes')->user();
+        return \Illuminate\Support\Facades\Auth::user();
     }
 
     /**
@@ -85,7 +74,7 @@ class RsiaUndanganController extends Controller
      */
     public function filterableBy(): array
     {
-        return ['tipe', 'penerima'];
+        return ['tipe', 'penerima', 'tanggal'];
     }
 
     /**
@@ -95,7 +84,7 @@ class RsiaUndanganController extends Controller
      */
     public function sortableBy(): array
     {
-        return ['no_surat', 'created_at', 'updated_at'];
+        return ['no_surat', 'tanggal', 'created_at', 'updated_at'];
     }
 
     /**
@@ -105,7 +94,7 @@ class RsiaUndanganController extends Controller
      */
     public function aggregates(): array
     {
-        return [];
+        return ['peserta', 'peserta.pegawai'];
     }
 
     /**
@@ -125,7 +114,7 @@ class RsiaUndanganController extends Controller
      */
     public function includes(): array
     {
-        return ['undangan'];
+        return ['penanggungJawab', 'peserta.pegawai', 'surat' ];
     }
 
     /**

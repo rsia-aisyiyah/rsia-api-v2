@@ -4,11 +4,17 @@ namespace App\Helpers;
 
 class ApiResponse
 {
-  public static function success($message = null)
+  public static function success($message = null, $data = [])
   {
-    return response()->json([
+    $body = [
       'message' => $message,
-    ], 200);
+    ];
+
+    if (!empty($data)) {
+      $body['data'] = $data;
+    }
+
+    return response()->json($body, 200);
   }
 
   public static function successWithData($data, $message = null)
@@ -45,8 +51,8 @@ class ApiResponse
   public static function notFound($message = "")
   {
     return response()->json([
-      'message'   => $message,
-      'error' => "Cannot find data or resource",
+      'message' => $message,
+      'error'   => "Cannot find data or resource",
     ], 404);
   }
 

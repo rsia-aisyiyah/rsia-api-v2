@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Awobaz\Compoships\Compoships;
 use Illuminate\Database\Eloquent\Model;
-use Thiagoprz\CompositeKey\HasCompositeKey;
 
 /**
  * App\Models\RsiaPenerimaUndangan
@@ -33,11 +32,11 @@ use Thiagoprz\CompositeKey\HasCompositeKey;
  */
 class RsiaPenerimaUndangan extends Model
 {
-    use HasCompositeKey, Compoships;
+    use Compoships;
 
     protected $table = 'rsia_penerima_undangan';
 
-    protected $primaryKey = ['no_surat', 'penerima', 'tipe'];
+    protected $primaryKey = 'undangan_id';
 
     public $incrementing = false;
 
@@ -46,10 +45,10 @@ class RsiaPenerimaUndangan extends Model
     protected $guarded = [];
 
     protected $casts = [
-        'no_surat' => 'string',
         'penerima' => 'string',
-        'tipe'     => 'string',
-        'model'    => 'string',
+        'creared_at' => 'datetime',
+        'updated_at' => 'datetime',
+        'deleted_at' => 'datetime',
     ];
 
     /**
@@ -59,7 +58,8 @@ class RsiaPenerimaUndangan extends Model
      */
     public function detail()
     {
-        return $this->belongsTo(Pegawai::class, 'penerima', 'nik')->select('nik', 'nama', 'jbtn', 'departemen', 'bidang');
+        return $this->belongsTo(Pegawai::class, 'penerima', 'nik')
+            ->select('nik', 'nama', 'jbtn', 'departemen', 'bidang', 'jk');
     }
 
     public function pegawai()
@@ -72,62 +72,8 @@ class RsiaPenerimaUndangan extends Model
         return $this->belongsTo(Petugas::class,  'penerima', 'nip');
     }
 
-    /**
-     * Get the related model that owns the RsiaPenerimaUndangan
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\MorphTo
-     */
-    public function relatedModel(): \Illuminate\Database\Eloquent\Relations\MorphTo
-    {
-        return $this->morphTo('no_surat', 'model', 'no_surat', 'no_surat');
-    }
-
-    /**
-     * Scope a query to search by related model.
-     *
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @param string $searchTerm
-     * @return \Illuminate\Database\Eloquent\Builder
-     */
-    public function scopeSearchByRelatedModel($query, $searchTerm)
-    {
-        return $query->whereHas('relatedModel', function ($query) use ($searchTerm) {
-            $query->where('perihal', 'like', "%{$searchTerm}%");
-        });
-    }
-
-    /**
-     * Scope a query to search by related model.
-     *
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @param string $start
-     * @param string $end
-     * @return \Illuminate\Database\Eloquent\Builder
-     */
-    public function scopeWhereBetweenDate($query, $start, $end)
-    {
-        if ($start == null || $end == null) {
-            return $query->whereHas('relatedModel');
-        } else {
-            return $query->whereHas('relatedModel', function ($query) use ($start, $end) {
-                $query->whereBetween('tanggal', [$start, $end]);
-            });
-        }
-    }
-
-    /**
-     * Scope a query to eager load related model and detail.
-     *
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @return \Illuminate\Database\Eloquent\Builder
-     */
-    public function scopeWithDetail($query)
-    {
-        return $query->with(['relatedModel', 'detail']);
-    }
-
     public function kehadiran()
     {
-        return $this->hasOne(RsiaKehadiranRapat::class, ['no_surat', 'nik'], ['no_surat', 'penerima'])->without('pegawai');
+        return $this->belongsTo(RsiaKehadiranRapat::class, ['undangan_id', 'penerima'], ['undangan_id', 'nik'])->without('pegawai');
     }
 }

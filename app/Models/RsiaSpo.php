@@ -4,52 +4,68 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * App\Models\RsiaSpo
  *
+ * @property string $id
  * @property string $nomor
+ * @property string $status
  * @property string $judul
- * @property string $unit
- * @property string $unit_terkait
+ * @property string $direktur_id
  * @property string $tgl_terbit
+ * @property string $unit_id
  * @property string $jenis
- * @property bool $status
- * @property-read \App\Models\RsiaSpoDetail|null $detail
+ * @property string $pengertian
+ * @property string $tujuan
+ * @property string $kebijakan
+ * @property string $prosedur
  * @method static \Illuminate\Database\Eloquent\Builder|RsiaSpo newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|RsiaSpo newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|RsiaSpo query()
- * @method static \Illuminate\Database\Eloquent\Builder|RsiaSpo whereJenis($value)
- * @method static \Illuminate\Database\Eloquent\Builder|RsiaSpo whereJudul($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|RsiaSpo whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|RsiaSpo whereNomor($value)
  * @method static \Illuminate\Database\Eloquent\Builder|RsiaSpo whereStatus($value)
  * @method static \Illuminate\Database\Eloquent\Builder|RsiaSpo whereTglTerbit($value)
- * @method static \Illuminate\Database\Eloquent\Builder|RsiaSpo whereUnit($value)
- * @method static \Illuminate\Database\Eloquent\Builder|RsiaSpo whereUnitTerkait($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|RsiaSpo whereUnitId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|RsiaSpo whereJenis($value)
  * @mixin \Eloquent
  */
 class RsiaSpo extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $table = 'rsia_spo';
 
-    protected $guarded = [];
+    protected $guarded = [
+        'id'
+    ];
 
-    protected $primaryKey = 'nomor';
-    
-    public $timestamps = false;
+    protected $primaryKey = 'id';
 
-    public $incrementing = false;
+    public $timestamps = true;
+
+    public $incrementing = true;
 
     public $casts = [
         'nomor' => 'string',
-        'status' => 'boolean',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+        'deleted_at' => 'datetime',
     ];
 
-    
-    public function detail()
+    public function units()
     {
-        return $this->hasOne(RsiaSpoDetail::class, 'nomor', 'nomor');
+        return $this->hasMany(RsiaSpoUnits::class, 'spo_id', 'id');
+    }
+    public function unit()
+    {
+        return $this->belongsTo(Departemen::class, 'unit_id', 'dep_id');
+    }
+
+    public function direktur()
+    {
+        return $this->belongsTo(Pegawai::class, 'direktur_id', 'nik');
     }
 }

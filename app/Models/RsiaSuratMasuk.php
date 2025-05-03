@@ -18,7 +18,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string|null $pelaksanaan_end
  * @property string|null $tempat
  * @property string $ket
- * @property string $berkas
+ * @property string|null $berkas
  * @property string $status
  * @method static \Illuminate\Database\Eloquent\Builder|RsiaSuratMasuk newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|RsiaSuratMasuk newQuery()
@@ -41,16 +41,42 @@ class RsiaSuratMasuk extends Model
 {
     use HasFactory;
 
+    /**
+     * The table associated with the model.
+     *
+     * @var string
+     */
     protected $table = 'rsia_surat_masuk';
 
+    /**
+     * The primary key associated with the table.
+     *
+     * @var string
+     */
     protected $primaryKey = 'no';
 
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array
+     */
     protected $guarded = ['no'];
 
+    /**
+     * Indicates if the model should be timestamped.
+     *
+     * @var bool
+     */
     public $timestamps = false;
 
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array
+     */
     protected $casts = [
-        'nosimrs' => 'date',
-        'no_surat' => 'string',
+        'no_simrs'  => 'date',
+        'tgl_surat' => 'date',
+        'no_surat'  => 'string',
     ];
 }

@@ -104,46 +104,66 @@ class RsiaUndanganController extends Controller
     /**
      * Download undangan internal
      *
-     * @param  string $base64_no_surat
+     * @param  string $id
      * @return \Illuminate\Http\Response
      */
-    public function download($base64_no_surat)
+    public function download($id)
     {
-        $noSurat = null;
-        try {
-            $noSurat = base64_decode($base64_no_surat);
-        } catch (\Throwable $th) {
-            return ApiResponse::error('Data tidak ditemukan', 404);
+        $undangan = \App\Models\RsiaUndangan::with('surat', 'penanggungJawab.jenjang_jabatan')->find($id);
+        
+        if (!$undangan) {
+            return ApiResponse::error('Resource not found', 'resource_not_found', null, 404);
         }
 
-        $penerima = \App\Models\RsiaPenerimaUndangan::where('no_surat', $noSurat)->with(['pegawai.dep'])->get();
-
-        if ($penerima->count() == 0) {
-            return ApiResponse::error('Undangan belum memiliki penerima, setidaknya ada 1 penerima undangan', 404);
-        }
-        
-        // penerima order by pegawai nama ascending
-        $penerima = $penerima->sortBy('pegawai.nama', SORT_NATURAL | SORT_FLAG_CASE);
-
-        // reset key $penerima
-        $penerima = $penerima->values();
-        
-        $model = $penerima->first()->model;
-        $model = new $model;
-        
-        $detailUndangan = $model->with(['penanggungJawab' => function($qq) {
-            return $qq->with('jenjang_jabatan')->select('nik', 'nama', 'bidang', 'jbtn', 'jnj_jabatan');
-        }])->where('no_surat', $noSurat)->first();
+        $penerima = \App\Models\RsiaPenerimaUndangan::where('undangan_id', $id)->with(['pegawai.dep'])->get();
+        $penerima = $penerima->sortBy('pegawai.nama', SORT_NATURAL | SORT_FLAG_CASE)->values();
 
         $pdf = \Mccarlosen\LaravelMpdf\Facades\LaravelMpdf::loadView('pdf.undangan.undangan', [
-            'nomor'    => $noSurat,
             'penerima' => $penerima,
-            'undangan' => $detailUndangan,
+            'undangan' => $undangan,
         ], [], [
             'default_font' => 'new_times',
         ]);
 
-        return $pdf->stream('undangan_internal.pdf');
+        return $pdf->stream('undangan_' . \Str::slug($undangan->perihal) . '.pdf');
+
+        // $noSurat = null;
+        // try {
+        //     $noSurat = base64_decode($base64_no_surat);
+        // } catch (\Throwable $th) {
+        //     return ApiResponse::error('Data tidak ditemukan', 404);
+        // }
+
+        // $penerima = \App\Models\RsiaPenerimaUndangan::where('no_surat', $noSurat)->with(['pegawai.dep'])->get();
+
+        // if ($penerima->count() == 0) {
+        //     return ApiResponse::error('Undangan belum memiliki penerima, setidaknya ada 1 penerima undangan', 404);
+        // }
+        
+        // // penerima order by pegawai nama ascending
+        // $penerima = $penerima->sortBy('pegawai.nama', SORT_NATURAL | SORT_FLAG_CASE);
+
+        // // reset key $penerima
+        // $penerima = $penerima->values();
+        
+        // $model = $penerima->first()->model;
+        // $model = new $model;
+        
+        // $detailUndangan = $model->with(['penanggungJawab' => function($qq) {
+        //     return $qq->with('jenjang_jabatan')->select('nik', 'nama', 'bidang', 'jbtn', 'jnj_jabatan');
+        // }])->where('no_surat', $noSurat)->first();
+
+        // $pdf = \Mccarlosen\LaravelMpdf\Facades\LaravelMpdf::loadView('pdf.undangan.undangan', [
+        //     'nomor'    => $noSurat,
+        //     'penerima' => $penerima,
+        //     'undangan' => $detailUndangan,
+        // ], [], [
+        //     'default_font' => 'new_times',
+        // ]);
+
+        // return $pdf->stream('undangan_internal.pdf');
+
+        // =============================================
 
         // $html = view('pdf.undangan.undangan', [
         //     'nomor'    => $noSurat,
@@ -170,6 +190,66 @@ class RsiaUndanganController extends Controller
         // return $pdf->stream('undangan_internal.pdf');
     }
 
+    /**
+     * Get proof of undangan
+     *
+     * @param  string $base64_no_surat
+     * @return \Illuminate\Http\Response
+     */
+    public function qrContent($id)
+    {
+        $undangan = \App\Models\RsiaUndangan::find($id);
+
+        if (!$undangan) {
+            return ApiResponse::error('Resouce not found', 'resource_not_found',  null, 404);
+        }
+
+        $encryptedId = \Illuminate\Support\Facades\Crypt::encrypt($id);
+
+        // undangan to collection
+        $undangan = collect($undangan->toArray());
+        $undangan->put('qr', [
+            'content' => $encryptedId,
+        ]);
+
+        // $qr = \Endroid\QrCode\Builder\Builder::create()
+        //     ->writer(new \Endroid\QrCode\Writer\PngWriter())
+        //     ->writerOptions([])
+        //     ->data(\Illuminate\Support\Facades\Hash::make($id))
+        //     ->encoding(new \Endroid\QrCode\Encoding\Encoding('ISO-8859-1'))
+        //     ->errorCorrectionLevel(new \Endroid\QrCode\ErrorCorrectionLevel\ErrorCorrectionLevelHigh())
+        //     ->build();
+
+        // return response($qr->getString(), 200)
+        //     ->header('Content-Type', 'image/png')
+        //     ->header('Content-Disposition', 'inline; filename="qrcode.png"');
+
+        return ApiResponse::success('success', $undangan);
+    }
+
+    /**
+     * Get proof of undangan
+     *
+     * @param  string $id
+     * @return \Illuminate\Http\Response
+     */
+    public function proof($id)
+    {
+        $undangan = \App\Models\RsiaUndangan::with('surat', 'penanggungJawab')->find($id);
+        $penerima = \App\Models\RsiaPenerimaUndangan::with('kehadiran', 'pegawai')->where('undangan_id', $id)->with(['detail'])->get();
+
+        if (!$penerima || !$undangan) {
+            return ApiResponse::error('Resource not found','found', null,404);
+        }
+
+        $pdf = \Mccarlosen\LaravelMpdf\Facades\LaravelMpdf::loadView('pdf.undangan.kehadiran', [
+            'undangan' => $undangan,
+            'penerima' => $penerima,
+        ]);
+
+        return $pdf->stream('proof-kehadiran-' . \Hash::make($id) .'.pdf');
+    }
+    
     /**
      * Get notulen from surat
      *

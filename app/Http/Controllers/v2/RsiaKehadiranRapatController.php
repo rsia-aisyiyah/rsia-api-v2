@@ -38,115 +38,66 @@ class RsiaKehadiranRapatController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'no_surat'  => 'required|string',
-            'nik'       => 'string|exists:pegawai,nik',
-            'karyawans' => 'array',
+            'undangan_id' => 'required|string|exists:rsia_undangan,id',
+            'nik'         => 'array',
+            'nik.*'       => 'string|exists:pegawai,nik',
         ]);
 
-        // karyawans exists in pegawai table
-        if ($request->has('karyawans')) {
-            foreach ($request->karyawans as $nik) {
-                $request->validate([
-                    'karyawans.*' => 'exists:pegawai,nik',
-                ]);
-            }
+        // Ambil NIK yang valid untuk undangan ini
+        $validParticipants = \App\Models\RsiaPenerimaUndangan::where('undangan_id', $request->undangan_id)
+            ->pluck('penerima')
+            ->toArray();
+
+        // Cek jika ada NIK yang tidak termasuk dalam penerima undangan
+        $invalidNik = array_diff($request->nik, $validParticipants);
+        if (!empty($invalidNik)) {
+            return ApiResponse::error(
+                'Beberapa karyawan tidak terdaftar dalam undangan ini',
+                'not_permitted',
+                ['invalid_nik' => $invalidNik],
+                403
+            );
         }
 
-        // auth user
-        $user = \Illuminate\Support\Facades\Auth::guard('user-aes')->user();
+        // Cek yang sudah hadir agar tidak double insert
+        $alreadyHadir = RsiaKehadiranRapat::where('undangan_id', $request->undangan_id)
+            ->whereIn('nik', $request->nik)
+            ->pluck('nik')
+            ->toArray();
 
-        // check apakah no_surat ada didalam table penerima undangan
-        $penerimaUndangan = \App\Models\RsiaPenerimaUndangan::where('no_surat', $request->no_surat)->get();
-        if (!$penerimaUndangan) {
-            return ApiResponse::error('Kegiatan / Undangan tidak ditemukan', 'resource_not_found', null, 404);
+        // Sisakan hanya yang belum hadir
+        $newAttendance = array_diff($request->nik, $alreadyHadir);
+
+        // Insert baru
+        $data = [];
+        foreach ($newAttendance as $nik) {
+            $data[] = [
+                'undangan_id' => $request->undangan_id,
+                'nik'         => $nik,
+                'created_at'  => now(),
+                'updated_at'  => now(),
+            ];
         }
 
-        if ($request->has('nik')) { // petugas yang melakukan
-            $request->validate([
-                'tipe'      => 'required|string|in:surat/internal,komite/ppi,komite/pmkp,komite/medis,komite/keperawatan,komite/kesehatan,berkas/notulen',
-                'model'     => 'required|string|regex:/App\\\\Models\\\\[A-Za-z]+/',
-            ]);
-    
-            // check if model file exists model from request is App\Models\RsiaSuratInternal
-            if (!file_exists(app_path('Models/' . str_replace('App\Models\\', '', $request->model) . '.php'))) {
-                return ApiResponse::error('Model not found : Model ' . $request->model . ' not found', 'resource_not_found', null, 404);
-            }
-
-            // create or update penerima undangan
-            $penerimaUndangan = \App\Models\RsiaPenerimaUndangan::updateOrCreate([
-                'no_surat' => $request->no_surat,
-                'penerima' => $request->nik,
-            ], [
-                'no_surat' => $request->no_surat,
-                'penerima' => $request->nik,
-                'tipe'     => $request->tipe,
-                'model'    => $request->model,
-            ]);
-
-            if ($request->has('karyawans')) {
-                foreach ($request->karyawans as $nik) {
-                    RsiaKehadiranRapat::firstOrCreate([
-                        'nik'      => $nik,
-                        'no_surat' => $request->no_surat,
-                    ]);
-                }
-
-                \App\Helpers\Logger\RSIALogger::kehadiran('ATTENDANCE ADDED', 'info', [
-                    'isOperator' => true,                  // 'isOperator' => 'true' or 'false
-                    'no_surat'   => $request->no_surat,
-                    'penerima'   => $request->nik,
-                    'karyawans'  => $request->karyawans,
-                ]);
-            }
-        } else { // request dari client (mobile) ----- user harus login mandiri, absensi tidak dapat diwakilkan
-            if (!$penerimaUndangan->contains('penerima', null, $user->id_user)) {
-                return ApiResponse::error('Anda tidak terdaftar dalam undangan ini', 'not_permitted', null, 403);
-            }
-
-            $absen = RsiaKehadiranRapat::where('nik', $user->id_user)
-                ->where('no_surat', $request->no_surat)
-                ->first();
-
-            if ($absen) {
-                \App\Helpers\Logger\RSIALogger::kehadiran('ATTENDED', 'warning', [
-                    'no_surat' => $request->no_surat,
-                    'penerima' => $user->id_user,
-                    'message'  => 'Anda sudah melakukan absen',
-                ]);
-                return ApiResponse::error('Anda sudah melakukan absen', 'event_attended', 400);
-            }
-
-            // insert kehadiran rapat
-            RsiaKehadiranRapat::create([
-                'nik'      => $user->id_user,
-                'no_surat' => $request->no_surat,
-            ]);
-
-            \App\Helpers\Logger\RSIALogger::kehadiran('ATTENDANCE ADDED', 'info', [
-                'isOperator' => false,                // 'isOperator' => 'true' or 'false
-                'no_surat'   => $request->no_surat,
-                'penerima'   => $user->id_user,
-            ]);
+        if (!empty($data)) {
+            RsiaKehadiranRapat::insert($data);
         }
 
-        return ApiResponse::success('Kehadiran rapat berhasil disimpan');
+        return ApiResponse::success([
+            'inserted' => array_values($newAttendance),
+            'skipped'  => $alreadyHadir,
+        ], 'Kehadiran berhasil dicatat');
     }
 
     /**
      * Display the specified resource.
      *
-     * @param  String  $bae64_no_surat
+     * @param  $undangan_id
      * @return \Illuminate\Http\Response
      */
-    public function show(String $base64_no_surat)
+    public function show($undangan_id)
     {
-        try {
-            $no_surat = base64_decode($base64_no_surat);
-        } catch (\Throwable $th) {
-            return ApiResponse::error('Invalid key, Key must be a valid base64 string', 'invalid_keys', $th->getMessage(), 400);
-        }
-
-        $rsiaKehadiranRapat = RsiaKehadiranRapat::where('no_surat', $no_surat)->get();
+        $rsiaKehadiranRapat = RsiaKehadiranRapat::where('undangan_id', $undangan_id)->get();
 
         return new \App\Http\Resources\RealDataCollection($rsiaKehadiranRapat);
     }

@@ -3,11 +3,13 @@
 use Orion\Facades\Orion;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['user-aes', 'claim:role,pegawai|dokter'])->group(function () {
+Route::middleware(['auth:aes', 'claim:role,pegawai|dokter'])->group(function () {
+
+  Route::get('pegawai/get', [\App\Http\Controllers\v2\PegawaiController::class, 'get'])->name('pegawai.get');
+  
   // ==================== PEGAWAI
   Orion::resource('pegawai', \App\Http\Controllers\Orion\PegawaiController::class)->only(['search', 'show']);
-  Route::resource('pegawai', \App\Http\Controllers\v2\PegawaiController::class)->except(['create', 'edit', 'show'])
-    ->parameters(['pegawai' => 'nik']);
+  Route::resource('pegawai', \App\Http\Controllers\v2\PegawaiController::class)->except(['create', 'edit', 'show'])->parameters(['pegawai' => 'nik']);
 
   // ==================== UPDATE PROFILE PEGAWAI
   Orion::belongsToManyResource('pegawai', 'cuti', \App\Http\Controllers\Orion\CutiPegawaiController::class)->only(['search'])->parameters(['pegawai' => 'nik', 'cuti' => 'id_cuti']);
