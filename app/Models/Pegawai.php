@@ -115,6 +115,10 @@ class Pegawai extends Model
         'nik' => 'string',
     ];
 
+    protected $hidden = [
+        'id'
+    ];
+
     protected $guarded = ['id'];
 
 
