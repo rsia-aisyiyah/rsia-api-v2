@@ -113,7 +113,7 @@
 
                                 <div class="mt-24">
                                     <div class="leading-none">
-                                        <p class="font-bold"><u>dr. Rendy Yoga Adrian, Sp.A</u></p>
+                                        <p class="font-bold"><u>dr. Rendy Yoga Ardian, Sp.A</u></p>
                                     </div>
                                 </div>
                             </td>
