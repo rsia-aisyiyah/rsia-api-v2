@@ -47,7 +47,7 @@ Pastikan kode Anda mengikuti standar berikut:
 
 ## Komunikasi
 
-Jika Anda memiliki pertanyaan atau butuh klarifikasi, jangan ragu untuk menghubungi kami di [email@contoh.com].
+Jika Anda memiliki pertanyaan atau butuh klarifikasi, jangan ragu untuk menghubungi kami di [info@rsiaaisyiyah.com].
 
 ## Proses Peninjauan
 
