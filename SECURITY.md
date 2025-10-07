@@ -6,7 +6,7 @@ Keamanan adalah prioritas utama dalam pengembangan API RSIA Aisyiyah Pekajangan.
 
 Jika Anda menemukan kerentanan keamanan, silakan laporkan dengan cara berikut:
 
-1. Kirim email ke tim keamanan kami di [security@rsia-aisyiyah-pekajangan.com].
+1. Kirim email ke tim keamanan kami di [info@rsiaaisyiyah.com].
 2. Sertakan deskripsi detail tentang kerentanan yang Anda temukan.
 3. Jelaskan langkah-langkah untuk mereproduksi kerentanan tersebut.
 4. Sertakan informasi tambahan yang relevan, seperti bukti konsep, tangkapan layar, atau log.
@@ -32,4 +32,4 @@ Kami menghargai bantuan Anda dalam menjaga keamanan proyek ini. Terima kasih tel
 
 ## Informasi Tambahan
 
-Untuk informasi lebih lanjut tentang kebijakan keamanan dan penanganan kerentanan, Anda dapat menghubungi tim keamanan kami di [security@rsia-aisyiyah-pekajangan.com].
+Untuk informasi lebih lanjut tentang kebijakan keamanan dan penanganan kerentanan, Anda dapat menghubungi tim keamanan kami di [info@rsiaaisyiyah.com].

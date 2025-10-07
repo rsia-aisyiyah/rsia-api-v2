@@ -38,7 +38,7 @@ Kode Etik ini berlaku dalam ruang proyek dan interaksi profesional yang terkait 
 
 ## Penegakan
 
-Kasus pelecehan, atau perilaku lain yang tidak dapat diterima, dapat dilaporkan dengan menghubungi tim proyek di [email@contoh.com]. Semua keluhan akan ditinjau dan diselidiki dan akan menghasilkan respons yang dianggap perlu dan sesuai dengan keadaan. Tim proyek berkewajiban untuk menjaga kerahasiaan pelapor insiden. Detail lebih lanjut tentang kebijakan penegakan spesifik dapat diposting secara terpisah.
+Kasus pelecehan, atau perilaku lain yang tidak dapat diterima, dapat dilaporkan dengan menghubungi tim proyek di [info@rsiaaisyiyah.com]. Semua keluhan akan ditinjau dan diselidiki dan akan menghasilkan respons yang dianggap perlu dan sesuai dengan keadaan. Tim proyek berkewajiban untuk menjaga kerahasiaan pelapor insiden. Detail lebih lanjut tentang kebijakan penegakan spesifik dapat diposting secara terpisah.
 
 Pemelihara proyek yang tidak mengikuti atau menegakkan Kode Etik dengan itikad baik dapat menghadapi konsekuensi sementara atau permanen sebagaimana ditentukan oleh manajemen RSIA Aisyiyah Pekajangan.
 
