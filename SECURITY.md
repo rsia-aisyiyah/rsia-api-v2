@@ -32,4 +32,4 @@ Kami menghargai bantuan Anda dalam menjaga keamanan proyek ini. Terima kasih tel
 
 ## Informasi Tambahan
 
-Untuk informasi lebih lanjut tentang kebijakan keamanan dan penanganan kerentanan, Anda dapat menghubungi tim keamanan kami di [security@rsia-aisyiyah-pekajangan.com].
+Untuk informasi lebih lanjut tentang kebijakan keamanan dan penanganan kerentanan, Anda dapat menghubungi tim keamanan kami di [info@rsiaaisyiyah.com].
